@@ -181,47 +181,63 @@ const SA = [
 ];
 
 // ─── 40-COURSE ARRAY ─────────────────────────────────────────────────────────
+// Area 0 = Planning a Safe and Healthy Learning Environment
+// Area 1 = Advancing Children's Physical and Intellectual Development
+// Area 2 = Supporting Children's Social and Emotional Development
+// Area 3 = Building Productive Relationships with Families
+// Area 4 = Managing an Effective Program Operation
+// Area 5 = Maintaining a Commitment to Professionalism
+// Area 6 = Observing and Recording Children's Behavior
+// Area 7 = Understanding the Principles of Child Development and Learning
 const COURSES = [
-  { name:'Early Education Essentials',               hours:3, area:0, kw:['early education essentials'] },
-  { name:'Space Planning in the Preschool Classroom',hours:3, area:0, kw:['space planning'] },
-  { name:'Materials in the Preschool Classroom',     hours:3, area:0, kw:['materials in the preschool'] },
-  { name:'Nutrition',                                hours:3, area:0, kw:['nutrition'] },
-  { name:'Active Supervision',                       hours:3, area:0, kw:['active supervision'] },
-  { name:'Physical Development in Preschool',        hours:3, area:1, kw:['physical development'] },
-  { name:'Language & Literacy in Preschool',         hours:3, area:1, kw:['language','literacy'] },
-  { name:'The Arts for Preschoolers',                hours:3, area:1, kw:['arts for preschool','the arts'] },
-  { name:'Science and Math for Preschool',           hours:3, area:1, kw:['science and math'] },
-  { name:'Preschool Dual Language and Technology',   hours:3, area:1, kw:['dual language','technology'] },
-  { name:'Preschool Social Development',             hours:3, area:2, kw:['social development'] },
-  { name:'Preschool Self Concept',                   hours:3, area:2, kw:['self concept'] },
-  { name:'Adult Modeling for Preschool',             hours:3, area:2, kw:['adult modeling'] },
-  { name:'Preschool Guidance',                       hours:3, area:2, kw:['guidance'] },
-  { name:'Cultural Identity in Preschool',           hours:3, area:2, kw:['cultural identity'] },
-  { name:'Building Productive Relationships Part 1', hours:3, area:3, kw:['relationships part 1','productive relationships part 1'] },
-  { name:'Building Productive Relationships Part 2', hours:3, area:3, kw:['relationships part 2','productive relationships part 2'] },
-  { name:'Building Productive Relationships Part 3', hours:3, area:3, kw:['relationships part 3','productive relationships part 3'] },
-  { name:'Building Productive Relationships Part 4', hours:3, area:3, kw:['relationships part 4','productive relationships part 4'] },
-  { name:'Building Productive Relationships Part 5', hours:3, area:3, kw:['relationships part 5','productive relationships part 5'] },
-  { name:'Community Partnerships',                   hours:3, area:3, kw:['community partnerships'] },
-  { name:'Effective Communication with Coworkers',   hours:3, area:4, kw:['effective communication'] },
-  { name:'Preparing for Substitutes',                hours:3, area:4, kw:['substitutes'] },
-  { name:'Professional Development',                 hours:3, area:4, kw:['professional development'] },
-  { name:'Ethics in Early Childhood',                hours:3, area:4, kw:['ethics'] },
-  { name:'Record Keeping',                           hours:3, area:5, kw:['record keeping'] },
-  { name:'Reporting',                                hours:3, area:5, kw:['reporting'] },
-  { name:'Objective Observation',                    hours:3, area:5, kw:['objective observation','observation'] },
-  { name:'Assessment',                               hours:3, area:5, kw:['assessment'] },
-  { name:'Planning from Assessment',                 hours:3, area:5, kw:['planning from assessment'] },
-  { name:'Theory Application – Jean Piaget',         hours:3, area:6, kw:['piaget'] },
-  { name:'Theory Application – Lev Vygotsky',        hours:3, area:6, kw:['vygotsky'] },
-  { name:'Theory Application – Erik Erikson',        hours:3, area:6, kw:['erikson'] },
-  { name:'Theory Application – Maria Montessori',    hours:3, area:6, kw:['montessori'] },
-  { name:'Theory Application – Urie Bronfenbrenner', hours:3, area:6, kw:['bronfenbrenner'] },
-  { name:'Developmental Delays',                     hours:3, area:6, kw:['developmental delays'] },
-  { name:'Intervention-Special Needs',               hours:3, area:6, kw:['intervention','special needs'] },
-  { name:'Advocacy in Early Childhood',              hours:3, area:7, kw:['advocacy'] },
-  { name:'Goal Setting in Early Childhood Classrooms',hours:3,area:7, kw:['goal setting'] },
-  { name:'Networking in the Early Childhood Profession',hours:3,area:7,kw:['networking'] },
+  // Area 0 — Safe & Healthy
+  { name:'Early Educator Essentials – foundations in health and safety', hours:3, area:0, kw:['early education essentials','early educator essentials'] },
+  { name:'Space Planning in the Preschool Classroom',                    hours:3, area:0, kw:['space planning'] },
+  { name:'Materials in the Preschool Classroom',                         hours:3, area:0, kw:['materials in the preschool'] },
+  { name:'Nutrition',                                                     hours:3, area:0, kw:['nutrition'] },
+  { name:'Active Supervision',                                            hours:3, area:0, kw:['active supervision'] },
+  // Area 1 — Advancing Physical & Intellectual
+  { name:'Physical Development in Preschool',                            hours:3, area:1, kw:['physical development'] },
+  { name:'Preschool Language and Literacy',                              hours:3, area:1, kw:['language','literacy'] },
+  { name:'Preschool and the Arts',                                        hours:3, area:1, kw:['arts for preschool','the arts','preschool and the arts'] },
+  { name:'Science and Math in Preschool',                                hours:3, area:1, kw:['science and math'] },
+  { name:'Preschool Technology and Dual Language',                       hours:3, area:1, kw:['dual language','technology'] },
+  // Area 2 — Social & Emotional
+  { name:'Social Development in Preschool',                              hours:3, area:2, kw:['social development'] },
+  { name:'Supporting Self-Concept in the Preschool Classroom',           hours:3, area:2, kw:['self concept'] },
+  { name:'Adult Modeling for Preschoolers',                              hours:3, area:2, kw:['adult modeling'] },
+  { name:'Preschool Guidance',                                            hours:3, area:2, kw:['guidance'] },
+  { name:'Preschool Cultural Identity',                                   hours:3, area:2, kw:['cultural identity'] },
+  // Area 3 — Family Relationships
+  { name:'Building Productive Relationships with Families - 1',          hours:3, area:3, kw:['relationships part 1','productive relationships part 1'] },
+  { name:'Building Productive Relationships with Families - 2',          hours:3, area:3, kw:['relationships part 2','productive relationships part 2'] },
+  { name:'Building Productive Relationships with Families - 3',          hours:3, area:3, kw:['relationships part 3','productive relationships part 3'] },
+  { name:'Building Productive Relationships with Families - 4',          hours:3, area:3, kw:['relationships part 4','productive relationships part 4'] },
+  { name:'Building Productive Relationships with Families - 5',          hours:3, area:3, kw:['relationships part 5','productive relationships part 5'] },
+  // Area 4 — Managing Effective Program
+  { name:'Community Partnerships',                                        hours:3, area:4, kw:['community partnerships'] },
+  { name:'Co-Worker Communication',                                       hours:3, area:4, kw:['effective communication','co-worker communication','coworker'] },
+  { name:'Planning for Substitutes',                                      hours:3, area:4, kw:['substitutes','planning for substitutes'] },
+  { name:'Record Keeping',                                                hours:3, area:4, kw:['record keeping'] },
+  { name:'Reporting',                                                     hours:3, area:4, kw:['reporting'] },
+  // Area 5 — Professionalism
+  { name:'Advocacy in Early Childhood',                                   hours:3, area:5, kw:['advocacy'] },
+  { name:'Ethics in the Early Childhood Profession',                      hours:3, area:5, kw:['ethics'] },
+  { name:'Professional Development in Early Childhood',                   hours:3, area:5, kw:['professional development'] },
+  { name:'Goal Setting in Early Childhood Classrooms',                    hours:3, area:5, kw:['goal setting'] },
+  { name:'Networking for Early Childhood Teachers',                       hours:3, area:5, kw:['networking'] },
+  // Area 6 — Observing & Recording
+  { name:'Objective Observation',                                         hours:3, area:6, kw:['objective observation','observation'] },
+  { name:'Assessment',                                                    hours:3, area:6, kw:['assessment'] },
+  { name:'Planning from Assessment',                                      hours:3, area:6, kw:['planning from assessment'] },
+  { name:'Developmental Delays',                                          hours:3, area:6, kw:['developmental delays'] },
+  { name:'Intervention / IEP / Special Needs',                           hours:3, area:6, kw:['intervention','special needs','iep'] },
+  // Area 7 — Child Development Principles
+  { name:'Theory Application – Jean Piaget',                             hours:3, area:7, kw:['piaget'] },
+  { name:'Theory Application – Lev Vygotsky',                            hours:3, area:7, kw:['vygotsky'] },
+  { name:'Theory Application – Erik Erikson',                            hours:3, area:7, kw:['erikson'] },
+  { name:'Theory Application – Maria Montessori',                        hours:3, area:7, kw:['montessori'] },
+  { name:'Theory Application – Urie Bronfenbrenner',                     hours:3, area:7, kw:['bronfenbrenner'] },
 ];
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
