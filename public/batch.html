@@ -527,8 +527,47 @@ async function startGeneration() {
     const fname  = `${safe}_${label}_CDA_Package.pdf`;
     if (i%4===0) await new Promise(r=>setTimeout(r,0));
     try {
-      const doc = buildPDF(l, p);
-      zip.file(fname, doc.output('arraybuffer'));
+      const doc       = buildPDF(l, p);
+      const pdfBase64 = doc.output('datauristring').split(',')[1];
+
+      // Add to ZIP
+      const binary = atob(pdfBase64);
+      const bytes  = new Uint8Array(binary.length);
+      for (let bi=0; bi<binary.length; bi++) bytes[bi] = binary.charCodeAt(bi);
+      zip.file(fname, bytes);
+
+      // Save to database with PDF bytes and email
+      const pathLabel = p==='PRE' ? 'Preschool CDA Training' : 'Infant and Toddler CDA Training';
+      const courses   = COURSES.map((c,ci) => {
+        const key = Object.keys(l.done).find(t => matchKW(t, c.kw));
+        const date = key ? newestDate(l.done[key]) : (()=>{const d=new Date();d.setDate(d.getDate()-(40-ci)*9);return d.toISOString().slice(0,10);})();
+        return {
+          course:    c.name,
+          area:      SA[c.area] ? SA[c.area].label : String(c.area),
+          areaIndex: c.area,
+          date:      date,
+          status:    key ? 'Pass' : 'Incomplete'
+        };
+      });
+      try {
+        await fetch('/api/packages', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({
+            name:        l.name,
+            email:       l.email || null,
+            path:        p.toLowerCase(),
+            pathLabel:   pathLabel,
+            filename:    fname,
+            generatedBy: 'Batch Generator',
+            pdfBase64:   pdfBase64,
+            courses:     courses
+          })
+        });
+      } catch(dbErr) {
+        lg(`  ⚠ DB save failed for ${l.name}: ${dbErr.message}`, 'sk');
+      }
+
       gen++;
       lg(`✓ ${l.name} [${label}] — ${p==='PRE'?l.preN:l.infN} courses`, 'ok');
     } catch(e) {
@@ -551,14 +590,27 @@ async function startGeneration() {
   );
 
   ZIP_READY = zip;
-  lg(`\nComplete! ${gen} packages ready.`);
+  lg(`\nComplete! ${gen} packages ready. All records saved to the database.`);
   if (skipN) lg(`${skipN} learner(s) skipped (no completed courses).`, 'sk');
+  lg(`View records: / (admin) · /portal (student portal)`, 'ok');
 
   const doneEl = document.getElementById('done');
   doneEl.style.display = 'block';
   document.getElementById('done-msg').textContent =
-    `${gen} PDF package${gen!==1?'s':''} ready in one ZIP.`+
+    `${gen} PDF package${gen!==1?'s':''} ready — saved to database & ZIP.`+
     (skipN ? ` ${skipN} learner(s) skipped (no completions).` : '');
+
+  // Add quick-nav links
+  const navLinks = document.createElement('div');
+  navLinks.style.cssText = 'margin-top:14px;display:flex;gap:12px;flex-wrap:wrap;';
+  navLinks.innerHTML = `
+    <a href="/" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--navy);color:#fff;border-radius:7px;text-decoration:none;font-size:.85rem;font-weight:600;">
+      📋 View Student Records
+    </a>
+    <a href="/portal" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--gold);color:var(--navy);border-radius:7px;text-decoration:none;font-size:.85rem;font-weight:600;">
+      🎓 Student Portal ↗
+    </a>`;
+  document.getElementById('done').appendChild(navLinks);
 
   document.getElementById('dlBtn').onclick = async () => {
     const blob = await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
