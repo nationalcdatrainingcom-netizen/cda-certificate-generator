@@ -14,7 +14,7 @@ async function initDB() {
       name        VARCHAR(255) NOT NULL,
       email       VARCHAR(255),
       center      VARCHAR(255),
-      path        VARCHAR(10) NOT NULL,   -- 'pre' or 'inf'
+      path        VARCHAR(10) NOT NULL,
       path_label  VARCHAR(100) NOT NULL,
       course_count INT DEFAULT 0,
       created_at  TIMESTAMPTZ DEFAULT NOW(),
@@ -40,7 +40,24 @@ async function initDB() {
       generated_at TIMESTAMPTZ DEFAULT NOW(),
       generated_by VARCHAR(255)
     );
+
+    -- Add unique constraint so upserts work correctly
+    -- (safe to run repeatedly — IF NOT EXISTS equivalent via DO block)
   `);
+
+  // Add unique constraint on (name, path) if it doesn't already exist
+  await pool.query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'students_name_path_unique'
+      ) THEN
+        ALTER TABLE students ADD CONSTRAINT students_name_path_unique UNIQUE (name, path);
+      END IF;
+    END$$;
+  `);
+
   console.log('✅ Database tables ready');
 }
 
@@ -100,35 +117,31 @@ async function saveStudentPackage(data) {
   try {
     await client.query('BEGIN');
 
-    // Upsert student
+    // Upsert student — ON CONFLICT now has a named constraint to target
     const stuRes = await client.query(`
       INSERT INTO students (name, email, center, path, path_label, course_count, updated_at)
       VALUES ($1, $2, $3, $4, $5, $6, NOW())
-      ON CONFLICT DO NOTHING
+      ON CONFLICT ON CONSTRAINT students_name_path_unique
+      DO UPDATE SET
+        updated_at   = NOW(),
+        course_count = EXCLUDED.course_count,
+        center       = COALESCE(EXCLUDED.center, students.center),
+        email        = COALESCE(EXCLUDED.email, students.email)
       RETURNING id
-    `, [data.name, data.email || null, data.center || null, data.path, data.pathLabel, data.courses.length]);
+    `, [
+      data.name,
+      data.email   || null,
+      data.center  || null,
+      data.path,
+      data.pathLabel,
+      data.courses.length
+    ]);
 
-    let studentId;
-    if (stuRes.rows.length > 0) {
-      studentId = stuRes.rows[0].id;
-    } else {
-      // Student with same name+path exists — create new record (re-run)
-      const existing = await client.query(
-        `SELECT id FROM students WHERE name=$1 AND path=$2 ORDER BY created_at DESC LIMIT 1`,
-        [data.name, data.path]
-      );
-      if (existing.rows.length > 0) {
-        studentId = existing.rows[0].id;
-        await client.query(
-          `UPDATE students SET updated_at=NOW(), course_count=$1, center=$2 WHERE id=$3`,
-          [data.courses.length, data.center || null, studentId]
-        );
-        // Delete old certificates for re-run
-        await client.query('DELETE FROM certificates WHERE student_id=$1', [studentId]);
-      }
-    }
+    const studentId = stuRes.rows[0].id;
 
-    // Insert certificates
+    // Replace certificates for this student (fresh re-run)
+    await client.query('DELETE FROM certificates WHERE student_id = $1', [studentId]);
+
     for (const course of data.courses) {
       await client.query(`
         INSERT INTO certificates (student_id, course_name, subject_area, cert_date, status, area_index)
@@ -136,7 +149,7 @@ async function saveStudentPackage(data) {
       `, [studentId, course.course, course.area, course.date, course.status, course.areaIndex]);
     }
 
-    // Log the generation
+    // Log the generation event
     await client.query(`
       INSERT INTO generated_packages (student_id, filename, path, generated_by)
       VALUES ($1, $2, $3, $4)
@@ -171,4 +184,15 @@ async function getStats() {
   return res.rows[0];
 }
 
-module.exports = { pool, initDB, getAllStudents, searchStudents, getStudent, getStudentCertificates, getStudentHistory, saveStudentPackage, deleteStudent, getStats };
+module.exports = {
+  pool,
+  initDB,
+  getAllStudents,
+  searchStudents,
+  getStudent,
+  getStudentCertificates,
+  getStudentHistory,
+  saveStudentPackage,
+  deleteStudent,
+  getStats
+};
