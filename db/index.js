@@ -45,14 +45,55 @@ async function initDB() {
     -- (safe to run repeatedly — IF NOT EXISTS equivalent via DO block)
   `);
 
-  // Add unique constraint on (name, path) if it doesn't already exist
+  // Deduplicate students before adding unique constraint.
+  // Keep the most recently updated row for each (name, path) pair,
+  // re-parent its certificates and packages, then delete the extras.
   await pool.query(`
     DO $$
+    DECLARE
+      dup RECORD;
+      keep_id INT;
     BEGIN
+      -- Only run if constraint doesn't exist yet
       IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint
-        WHERE conname = 'students_name_path_unique'
+        SELECT 1 FROM pg_constraint WHERE conname = 'students_name_path_unique'
       ) THEN
+
+        -- For every duplicate (name, path) group...
+        FOR dup IN
+          SELECT name, path
+          FROM students
+          GROUP BY name, path
+          HAVING COUNT(*) > 1
+        LOOP
+          -- Pick the most-recently-updated row to keep
+          SELECT id INTO keep_id
+          FROM students
+          WHERE name = dup.name AND path = dup.path
+          ORDER BY updated_at DESC, id DESC
+          LIMIT 1;
+
+          -- Re-parent certificates and packages to the keeper
+          UPDATE certificates
+            SET student_id = keep_id
+          WHERE student_id IN (
+            SELECT id FROM students
+            WHERE name = dup.name AND path = dup.path AND id <> keep_id
+          );
+
+          UPDATE generated_packages
+            SET student_id = keep_id
+          WHERE student_id IN (
+            SELECT id FROM students
+            WHERE name = dup.name AND path = dup.path AND id <> keep_id
+          );
+
+          -- Delete the duplicate rows
+          DELETE FROM students
+          WHERE name = dup.name AND path = dup.path AND id <> keep_id;
+        END LOOP;
+
+        -- Now it's safe to add the constraint
         ALTER TABLE students ADD CONSTRAINT students_name_path_unique UNIQUE (name, path);
       END IF;
     END$$;
