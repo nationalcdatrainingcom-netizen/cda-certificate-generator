@@ -614,80 +614,82 @@ function drawTranscript(doc,W,H,name,pLabel,center){
 }
 
 function drawCert(doc,W,H,name,row,pLabel,sigImg,logoImg){
-  // White background + navy double border
   doc.setFillColor(255,255,255); doc.rect(0,0,W,H,"F");
-  doc.setDrawColor(41,98,163); doc.setLineWidth(6); doc.rect(10,10,W-20,H-20);
-  doc.setDrawColor(41,98,163); doc.setLineWidth(1.5); doc.rect(15,15,W-30,H-30);
 
-  // Logo (top center)
-  if(logoImg){ doc.addImage(logoImg,W/2-110,18,220,58); }
-  else{ doc.setFontSize(10);doc.setFont("helvetica","bold");doc.setTextColor(41,98,163);doc.text("NATIONAL CDA TRAINING",W/2,34,{align:"center"}); }
+  // Triple border: thick navy, gold, thin navy
+  doc.setDrawColor(26,39,68); doc.setLineWidth(10); doc.rect(12,12,W-24,H-24);
+  doc.setDrawColor(201,168,76); doc.setLineWidth(2.5); doc.rect(20,20,W-40,H-40);
+  doc.setDrawColor(26,39,68); doc.setLineWidth(1); doc.rect(24,24,W-48,H-48);
 
-  // CERTIFICATE OF COMPLETION
-  doc.setFontSize(32); doc.setFont("helvetica","bold"); doc.setTextColor(20,20,20);
-  doc.text("CERTIFICATE OF COMPLETION",W/2,96,{align:"center"});
+  // ── LOGO (top center) ──
+  if(logoImg){
+    // Scale logo to fit nicely: max width 280, max height 72
+    const lw=280, lh=72;
+    doc.addImage(logoImg,W/2-lw/2,26,lw,lh);
+  } else {
+    doc.setFontSize(11);doc.setFont("helvetica","bold");doc.setTextColor(41,98,163);
+    doc.text("NATIONAL CDA TRAINING",W/2,58,{align:"center"});
+  }
 
-  // Double rule
-  doc.setDrawColor(130,130,130); doc.setLineWidth(1.5);
-  doc.line(38,104,W-38,104); doc.line(38,108,W-38,108);
+  // ── NAVY HEADER BAR ──
+  doc.setFillColor(26,39,68); doc.rect(24,104,W-48,52,"F");
+  doc.setFontSize(28); doc.setFont("helvetica","bold"); doc.setTextColor(255,255,255);
+  doc.text("CERTIFICATE OF COMPLETION",W/2,124,{align:"center"});
+  doc.setFontSize(10); doc.setTextColor(201,168,76);
+  doc.text("120-HOUR CDA TRAINING PROGRAM  |  "+pLabel.toUpperCase(),W/2,146,{align:"center"});
 
-  // This certifies that
-  doc.setFontSize(10); doc.setFont("helvetica","normal"); doc.setTextColor(80,80,80);
-  doc.text("This certifies that",W/2,124,{align:"center"});
+  // ── THIS CERTIFIES THAT ──
+  doc.setFontSize(10); doc.setFont("helvetica","italic"); doc.setTextColor(100,100,100);
+  doc.text("This certifies that",W/2,172,{align:"center"});
 
-  // Candidate name
-  doc.setFontSize(36); doc.setFont("helvetica","normal"); doc.setTextColor(26,39,68);
-  doc.text(name,W/2,162,{align:"center"});
+  // ── LEARNER NAME ──
+  doc.setFontSize(44); doc.setFont("helvetica","normal"); doc.setTextColor(26,39,68);
+  doc.text(name,W/2,216,{align:"center"});
 
   // Gold rule under name
-  doc.setDrawColor(201,168,76); doc.setLineWidth(1.5);
-  doc.line(80,170,W-80,170);
+  doc.setDrawColor(201,168,76); doc.setLineWidth(2);
+  doc.line(60,224,W-60,224);
 
-  // Has successfully completed
-  doc.setFontSize(10); doc.setFont("helvetica","normal"); doc.setTextColor(80,80,80);
-  doc.text("has successfully completed the 3-hour course",W/2,186,{align:"center"});
+  // ── HAS SUCCESSFULLY COMPLETED ──
+  doc.setFontSize(11); doc.setFont("helvetica","bold"); doc.setTextColor(60,60,60);
+  doc.text("has successfully completed the 3-hour course",W/2,244,{align:"center"});
 
-  // Course name - navy box
-  const cLines=doc.splitTextToSize(row.course,W-120);
-  const boxH=cLines.length>1?44:34;
-  doc.setFillColor(26,39,68); doc.roundedRect(46,194,W-92,boxH,4,4,"F");
-  doc.setFontSize(cLines.length>1?11:13); doc.setFont("helvetica","bold"); doc.setTextColor(255,255,255);
-  doc.text(cLines,W/2,cLines.length>1?212:216,{align:"center",lineHeightFactor:1.4});
-  const boxBot=194+boxH+8;
+  // ── COURSE NAME — large gold box ──
+  const cLines=doc.splitTextToSize(row.course,W-100);
+  const boxH=cLines.length>1?62:50;
+  const boxY=254;
+  doc.setFillColor(201,168,76); doc.roundedRect(40,boxY,W-80,boxH,5,5,"F");
+  doc.setDrawColor(26,39,68); doc.setLineWidth(1.5); doc.roundedRect(40,boxY,W-80,boxH,5,5,"S");
+  doc.setFontSize(cLines.length>1?16:20);
+  doc.setFont("helvetica","bold"); doc.setTextColor(26,39,68);
+  doc.text(cLines,W/2,cLines.length>1?boxY+22:boxY+32,{align:"center",lineHeightFactor:1.5});
 
-  // Age group
-  doc.setFontSize(9); doc.setFont("helvetica","italic"); doc.setTextColor(60,60,60);
-  doc.text("Age Group: "+pLabel,W/2,boxBot+12,{align:"center"});
+  const afterBox=boxY+boxH+10;
 
-  // CDA Subject Area
+  // ── SUBJECT AREA + HOURS ──
   doc.setFontSize(10); doc.setFont("helvetica","bold"); doc.setTextColor(26,39,68);
-  doc.text("CDA Subject Area:  "+AREAS[row.area],W/2,boxBot+27,{align:"center"});
+  doc.text("CDA Subject Area:  "+AREAS[row.area],W/2,afterBox+14,{align:"center"});
+  doc.setFontSize(9); doc.setFont("helvetica","normal"); doc.setTextColor(80,80,80);
+  doc.text("Hours Awarded: 3 Contact Hours   |   Date of Training: "+fmtDate(row.assignedDate),W/2,afterBox+28,{align:"center"});
 
-  // Hours & Date
-  doc.setFontSize(9.5); doc.setFont("helvetica","normal"); doc.setTextColor(40,40,40);
-  doc.text("Hours Awarded: 3 Contact Hours     |     Date of Training: "+fmtDate(row.assignedDate),W/2,boxBot+43,{align:"center"});
+  // Divider
+  doc.setDrawColor(200,200,200); doc.setLineWidth(0.5);
+  doc.line(40,afterBox+36,W-40,afterBox+36);
 
-  // Divider before signature block
-  doc.setDrawColor(200,195,185); doc.setLineWidth(.8);
-  doc.line(38,boxBot+52,W-38,boxBot+52);
-
-  // Agency info left, signature right
-  const sigY=boxBot+58;
+  // ── SIGNATURE BLOCK ──
+  const sigSecY=afterBox+44;
   doc.setFontSize(9); doc.setFont("helvetica","bold"); doc.setTextColor(26,39,68);
-  doc.text("National CDA Training  |  Michigan Child Care Training",44,sigY+12);
+  doc.text("National CDA Training  |  Michigan Child Care Training",44,sigSecY+12);
   doc.setFont("helvetica","normal"); doc.setFontSize(8.5); doc.setTextColor(80,80,80);
-  doc.text("4775 Erie Drive, Buchanan, MI 49107",44,sigY+24);
-  doc.text("Phone: 866-726-3056  |  Mary@NationalCDATraining.com",44,sigY+36);
-
-  // Signature image
-  if(sigImg){ doc.addImage(SIG,"JPEG",W-288,sigY-4,148,46); }
-
-  // Signature line + label
+  doc.text("4775 Erie Drive, Buchanan, MI 49107",44,sigSecY+25);
+  doc.text("Phone: 866-726-3056  |  Mary@NationalCDATraining.com",44,sigSecY+37);
+  if(sigImg){ doc.addImage(SIG,"JPEG",W-210,sigSecY,160,50); }
   doc.setDrawColor(26,39,68); doc.setLineWidth(1);
-  doc.line(W-292,sigY+46,W-44,sigY+46);
+  doc.line(W-220,sigSecY+52,W-44,sigSecY+52);
   doc.setFontSize(8.5); doc.setFont("helvetica","bold"); doc.setTextColor(26,39,68);
-  doc.text("Mary Wardlaw, Educational Specialist - Instructor of Record",W-292,sigY+57);
+  doc.text("Mary Wardlaw, Educational Specialist - Instructor of Record",W-220,sigSecY+62);
 }
+
 
 // ── PROGRESS & ALERTS ─────────────────────────────────────────
 function prog(lbl,pct){ document.getElementById("prog").style.display="block"; document.getElementById("plbl").textContent=lbl; document.getElementById("pfill").style.width=pct+"%"; }
