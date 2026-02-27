@@ -197,6 +197,11 @@ app.get('/api/packages/:packageId/pdf', async (req, res) => {
   }
 });
 
+// Student portal
+app.get('/portal', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'portal.html'));
+});
+
 // Catch-all — serve the frontend app
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
