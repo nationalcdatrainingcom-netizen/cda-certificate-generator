@@ -489,7 +489,7 @@ async function makePDF(){
   const doc=new jsPDF({orientation:"landscape",unit:"pt",format:"letter"});
   const W=792,H=612;
   prog("Cover page…",5);
-  drawCover(doc,W,H,name,pLabel);
+  drawCover(doc,W,H,name,pLabel,dates.length*3);
   prog("Transcript…",12);
   doc.addPage();
   drawTranscript(doc,W,H,name,pLabel);
@@ -497,7 +497,7 @@ async function makePDF(){
     prog(`Certificate ${i+1}/${dates.length}…`,Math.round(15+i/dates.length*82));
     await sleep(0);
     doc.addPage();
-    drawCert(doc,W,H,name,dates[i],pLabel);
+    drawCert(doc,W,H,name,dates[i],pLabel,dates.length*3);
   }
   prog("Saving…",98); await sleep(60);
   const safeN=name.replace(/[^a-zA-Z0-9 ]/g,"").replace(/\s+/g,"_");
@@ -686,14 +686,15 @@ async function redownload(s){
 }
 
 // ── PDF: COVER ────────────────────────────────────────────────
-function drawCover(doc,W,H,name,pLabel){
+function drawCover(doc,W,H,name,pLabel,totalHours){
+  totalHours=totalHours||120;
   doc.setFillColor(255,255,255);doc.rect(0,0,W,H,"F");
   doc.setDrawColor(26,39,68);doc.setLineWidth(7);doc.rect(11,11,W-22,H-22);
   doc.setDrawColor(201,168,76);doc.setLineWidth(2);doc.rect(18,18,W-36,H-36);
   try{doc.addImage(LOGO_B64,"PNG",W/2-110,22,220,62);}catch(e){}
   doc.setFillColor(26,39,68);doc.rect(18,88,W-36,68,"F");
   doc.setFontSize(22);doc.setFont("helvetica","bold");doc.setTextColor(201,168,76);
-  doc.text("120-HOUR CDA TRAINING PROGRAM",W/2,120,{align:"center"});
+  doc.text(totalHours+"-HOUR CDA TRAINING PROGRAM",W/2,120,{align:"center"});
   doc.setFontSize(13);doc.setTextColor(232,213,163);
   doc.text(pLabel,W/2,150,{align:"center"});
   doc.setDrawColor(201,168,76);doc.setLineWidth(1.5);doc.line(50,168,W-50,168);
@@ -754,7 +755,8 @@ function drawTranscript(doc,W,H,name,pLabel){
 }
 
 // ── PDF: CERTIFICATE ──────────────────────────────────────────
-function drawCert(doc,W,H,name,row,pLabel){
+function drawCert(doc,W,H,name,row,pLabel,totalHours){
+  totalHours=totalHours||120;
   doc.setFillColor(255,255,255);doc.rect(0,0,W,H,"F");
   // Triple border: blue, orange, green
   doc.setDrawColor(30,100,180);doc.setLineWidth(10);doc.rect(12,12,W-24,H-24);
@@ -771,7 +773,7 @@ function drawCert(doc,W,H,name,row,pLabel){
   doc.setFontSize(26);doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);
   doc.text("CERTIFICATE OF COMPLETION",W/2,y+22,{align:"center"});
   doc.setFontSize(10);doc.setTextColor(255,200,100);
-  doc.text("120-HOUR CDA TRAINING PROGRAM  |  "+pLabel.toUpperCase(),W/2,y+44,{align:"center"});
+  doc.text(totalHours+"-HOUR CDA TRAINING PROGRAM  |  "+pLabel.toUpperCase(),W/2,y+44,{align:"center"});
   y+=62;
 
   // This certifies that
