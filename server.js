@@ -65,12 +65,28 @@ app.post('/api/packages', async (req, res) => {
   }
 });
 
-// Delete student
+// Delete single student
 app.delete('/api/students/:id', async (req, res) => {
   try {
     await db.deleteStudent(req.params.id);
     res.json({ success: true });
   } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── BULK DELETE ───────────────────────────────────────────────
+// Body: { ids: [1, 2, 3, ...] }
+app.delete('/api/students', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || !ids.length) {
+      return res.status(400).json({ error: 'ids array required' });
+    }
+    const result = await db.deleteManyStudents(ids);
+    res.json({ success: true, deleted: result.deleted });
+  } catch (e) {
+    console.error('Bulk delete error:', e);
     res.status(500).json({ error: e.message });
   }
 });
