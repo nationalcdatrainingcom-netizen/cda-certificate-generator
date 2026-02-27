@@ -644,209 +644,95 @@ function drawTranscript(doc,W,H,name,pLabel,center){
 function drawCert(doc,W,H,name,row,pLabel,sigImg,logoImg){
   doc.setFillColor(255,255,255); doc.rect(0,0,W,H,"F");
 
-  // Triple border
-  doc.setDrawColor(26,39,68); doc.setLineWidth(10); doc.rect(12,12,W-24,H-24);
-  doc.setDrawColor(201,168,76); doc.setLineWidth(2.5); doc.rect(21,21,W-42,H-42);
-  doc.setDrawColor(26,39,68); doc.setLineWidth(1); doc.rect(25,25,W-50,H-50);
+  // Triple border: blue outer, orange middle, green inner
+  doc.setDrawColor(30,100,180); doc.setLineWidth(10); doc.rect(12,12,W-24,H-24);
+  doc.setDrawColor(220,100,30); doc.setLineWidth(2.5); doc.rect(21,21,W-42,H-42);
+  doc.setDrawColor(60,150,80); doc.setLineWidth(1.2); doc.rect(25,25,W-50,H-50);
 
-  // ── LOGO (top center) — use LOGO global directly ──
-  let y = 30;
-  if(LOGO){
-    try{ doc.addImage(LOGO,"PNG",W/2-130,y,260,70); }catch(e){}
-    y += 76;
+  // ── LOGO ──
+  let y = 32;
+  if(LOGO_B64){
+    try{ doc.addImage(LOGO_B64,"PNG",W/2-130,y,260,70); }catch(e){}
+    y += 82; // extra padding below logo
   } else {
-    doc.setFontSize(11);doc.setFont("helvetica","bold");doc.setTextColor(41,98,163);
+    doc.setFontSize(11);doc.setFont("helvetica","bold");doc.setTextColor(30,100,180);
     doc.text("NATIONAL CDA TRAINING",W/2,y+24,{align:"center"});
-    y += 34;
+    y += 38;
   }
 
-  // ── NAVY HEADER BAR ──
-  doc.setFillColor(26,39,68); doc.rect(25,y,W-50,54,"F");
+  // ── BLUE HEADER BAR ──
+  doc.setFillColor(30,100,180); doc.rect(25,y,W-50,54,"F");
   doc.setFontSize(26); doc.setFont("helvetica","bold"); doc.setTextColor(255,255,255);
   doc.text("CERTIFICATE OF COMPLETION",W/2,y+22,{align:"center"});
-  doc.setFontSize(10); doc.setTextColor(201,168,76);
+  doc.setFontSize(10); doc.setTextColor(255,200,100);
   doc.text("120-HOUR CDA TRAINING PROGRAM  |  "+pLabel.toUpperCase(),W/2,y+44,{align:"center"});
-  y += 60;
+  y += 62;
 
   // ── THIS CERTIFIES THAT ──
   doc.setFontSize(10); doc.setFont("helvetica","italic"); doc.setTextColor(100,100,100);
   doc.text("This certifies that",W/2,y+14,{align:"center"});
-  y += 18;
+  y += 20;
 
   // ── LEARNER NAME ──
-  doc.setFontSize(42); doc.setFont("helvetica","normal"); doc.setTextColor(26,39,68);
-  doc.text(name,W/2,y+36,{align:"center"});
-  y += 42;
+  doc.setFontSize(42); doc.setFont("helvetica","normal"); doc.setTextColor(30,100,180);
+  doc.text(name,W/2,y+34,{align:"center"});
+  y += 40;
 
-  // Gold rule under name
-  doc.setDrawColor(201,168,76); doc.setLineWidth(2);
+  // Orange rule under name
+  doc.setDrawColor(220,100,30); doc.setLineWidth(2.5);
   doc.line(60,y+2,W-60,y+2);
-  y += 12;
+  y += 14;
 
   // ── HAS SUCCESSFULLY COMPLETED ──
   doc.setFontSize(11); doc.setFont("helvetica","bold"); doc.setTextColor(60,60,60);
-  doc.text("has successfully completed the 3-hour course",W/2,y+14,{align:"center"});
+  doc.text("has successfully completed the 3-hour course",W/2,y+12,{align:"center"});
   y += 20;
 
-  // ── COURSE NAME — large gold box ──
+  // ── COURSE NAME — orange box ──
   const cLines=doc.splitTextToSize(row.course,W-110);
-  const boxH=cLines.length>1?56:44;
-  doc.setFillColor(201,168,76); doc.roundedRect(38,y,W-76,boxH,5,5,"F");
-  doc.setDrawColor(26,39,68); doc.setLineWidth(1.5); doc.roundedRect(38,y,W-76,boxH,5,5,"S");
-  doc.setFontSize(cLines.length>1?15:19);
-  doc.setFont("helvetica","bold"); doc.setTextColor(26,39,68);
-  const courseY = y + (cLines.length>1 ? 18 : 28);
-  doc.text(cLines,W/2,courseY,{align:"center",lineHeightFactor:1.5});
-  y += boxH + 10;
+  const boxH=cLines.length>1?56:46;
+  doc.setFillColor(220,100,30); doc.roundedRect(38,y,W-76,boxH,5,5,"F");
+  doc.setDrawColor(30,100,180); doc.setLineWidth(1.5); doc.roundedRect(38,y,W-76,boxH,5,5,"S");
+  doc.setFontSize(cLines.length>1?15:20);
+  doc.setFont("helvetica","bold"); doc.setTextColor(255,255,255);
+  doc.text(cLines,W/2,y+(cLines.length>1?20:30),{align:"center",lineHeightFactor:1.5});
+  y += boxH+10;
 
   // ── SUBJECT AREA + HOURS + DATE ──
-  doc.setFontSize(10); doc.setFont("helvetica","bold"); doc.setTextColor(26,39,68);
+  doc.setFontSize(10); doc.setFont("helvetica","bold"); doc.setTextColor(30,100,180);
   doc.text("CDA Subject Area:  "+AREAS[row.area],W/2,y+12,{align:"center"});
   doc.setFontSize(9); doc.setFont("helvetica","normal"); doc.setTextColor(80,80,80);
-  doc.text("Hours Awarded: 3 Contact Hours   |   Date of Training: "+fmtDate(row.assignedDate),W/2,y+25,{align:"center"});
+  doc.text("Hours Awarded: 3 Contact Hours   |   Date of Training: "+fmtDate(row.assignedDate),W/2,y+24,{align:"center"});
   y += 32;
 
-  // Divider
-  doc.setDrawColor(180,180,180); doc.setLineWidth(0.5);
-  doc.line(38,y+2,W-38,y+2);
+  // Green divider
+  doc.setDrawColor(60,150,80); doc.setLineWidth(1.2);
+  doc.line(38,y,W-38,y);
   y += 10;
 
   // ── SIGNATURE BLOCK ──
-  // Left: contact info
-  doc.setFontSize(9); doc.setFont("helvetica","bold"); doc.setTextColor(26,39,68);
-  doc.text("National CDA Training  |  Michigan Child Care Training",42,y+14);
+  doc.setFontSize(9); doc.setFont("helvetica","bold"); doc.setTextColor(30,100,180);
+  doc.text("National CDA Training  |  Michigan Child Care Training",42,y+12);
   doc.setFont("helvetica","normal"); doc.setFontSize(8.5); doc.setTextColor(80,80,80);
-  doc.text("4775 Erie Drive, Buchanan, MI 49107",42,y+26);
-  doc.text("Phone: 866-726-3056  |  Mary@NationalCDATraining.com",42,y+38);
+  doc.text("4775 Erie Drive, Buchanan, MI 49107",42,y+24);
+  doc.text("Phone: 866-726-3056  |  Mary@NationalCDATraining.com",42,y+36);
+  if(SIG_B64){ doc.addImage(SIG_B64,"JPEG",W-230,y,170,53); }
+  doc.setDrawColor(30,100,180); doc.setLineWidth(1);
+  doc.line(W-234,y+55,W-28,y+55);
+  doc.setFontSize(8.5); doc.setFont("helvetica","bold"); doc.setTextColor(30,100,180);
+  doc.text("Mary Wardlaw, President — Authorized Signature",W-234,y+64);
+  y += 70;
 
-  // Right: signature image + line + title
-  if(sigImg){ doc.addImage(SIG,"JPEG",W-230,y,170,53); }
-  doc.setDrawColor(26,39,68); doc.setLineWidth(1);
-  doc.line(W-234,y+56,W-28,y+56);
-  doc.setFontSize(8.5); doc.setFont("helvetica","bold"); doc.setTextColor(26,39,68);
-  doc.text("Mary Wardlaw, President — Authorized Signature",W-234,y+66);
+  // Green divider before contributors
+  doc.setDrawColor(60,150,80); doc.setLineWidth(1);
+  doc.line(38,y,W-38,y);
+  y += 8;
 
-  // Contributors reference (bottom center, bold)
-  doc.setFontSize(9); doc.setFont("helvetica","bolditalic"); doc.setTextColor(26,39,68);
-  doc.text("This course was developed and delivered by a team of contributors. See cover page for full contributor credits.",W/2,H-30,{align:"center"});
+  // ── CONTRIBUTORS ──
+  doc.setFontSize(8); doc.setFont("helvetica","bold"); doc.setTextColor(30,100,180);
+  doc.text("National CDA Training Course Contributors:",W/2,y+10,{align:"center"});
+  doc.setFontSize(8); doc.setFont("helvetica","normal"); doc.setTextColor(60,60,60);
+  doc.text("Kelly Burlison, BA Early Childhood Education  |  Mary Wardlaw, Educational Specialist in Early Childhood  |  Dr. Lilla Dale McManis, PhD — Education, Learning & Child Development",W/2,y+22,{align:"center"});
 }
 
-
-// ── PROGRESS & ALERTS ─────────────────────────────────────────
-function prog(lbl,pct){ document.getElementById("prog").style.display="block"; document.getElementById("plbl").textContent=lbl; document.getElementById("pfill").style.width=pct+"%"; }
-function alert2(t,msg){ const m={ok:"al-ok",err:"al-err",warn:"al-warn"}; document.getElementById("alerts").innerHTML=`<div class="al ${m[t]||"al-warn"}">${msg}</div>`; }
-
-// ── STUDENT DATABASE ──────────────────────────────────────────
-async function loadStats() {
-  try {
-    const r = await fetch("/api/stats");
-    const d = await r.json();
-    document.getElementById("s-total").textContent = d.total_students || 0;
-    document.getElementById("s-pre").textContent   = d.preschool || 0;
-    document.getElementById("s-inf").textContent   = d.infant || 0;
-    document.getElementById("s-certs").textContent = d.total_certs || 0;
-    document.getElementById("s-pkgs").textContent  = d.total_packages || 0;
-  } catch(e) {}
-}
-
-async function updateBadge() {
-  try {
-    const r = await fetch("/api/stats");
-    const d = await r.json();
-    document.getElementById("nb").textContent = d.total_students || 0;
-  } catch(e) {}
-}
-
-async function loadStudents() {
-  const q   = document.getElementById("srch")?.value || "";
-  const fp  = document.getElementById("fpth")?.value || "";
-  const url = `/api/students?q=${encodeURIComponent(q)}`;
-  try {
-    const r = await fetch(url);
-    allStudents = await r.json();
-    drawStudents(fp);
-  } catch(e) {
-    document.getElementById("slist").innerHTML = `<div class="al al-err">Could not load student records. Check server connection.</div>`;
-  }
-}
-
-function searchStudents() { loadStudents(); }
-
-function drawStudents(fpFilter) {
-  const fp = fpFilter || document.getElementById("fpth")?.value || "";
-  const list = fp ? allStudents.filter(s=>s.path===fp) : allStudents;
-  const el = document.getElementById("slist");
-  if (!list.length) { el.innerHTML=`<p style="color:var(--gray);text-align:center;padding:32px 0;">No students found.</p>`; return; }
-  el.innerHTML = list.map(s=>`
-    <div class="sc">
-      <div class="av">${s.name.charAt(0).toUpperCase()}</div>
-      <div class="si">
-        <h3>${s.name}</h3>
-        <p><span class="tag ${s.path==="pre"?"tp":"ti"}">${s.path_label}</span>
-        ${s.cert_count||0} certs &nbsp;·&nbsp; ${new Date(s.updated_at).toLocaleDateString()}${s.center?" &nbsp;·&nbsp; "+s.center:""}</p>
-      </div>
-      <div class="sa">
-        <button class="btn btn-ol" style="font-size:.8rem;padding:7px 12px;" onclick="viewStu(${s.id})">View</button>
-      </div>
-    </div>`).join("");
-}
-
-async function viewStu(id) {
-  try {
-    const r = await fetch(`/api/students/${id}`);
-    const s = await r.json();
-    document.getElementById("mname").textContent = s.name;
-    const rows = (s.certificates||[]).map((c,i)=>`<tr>
-      <td style="color:var(--gray);font-weight:700;">${i+1}</td>
-      <td>${c.course_name}</td>
-      <td style="font-size:.76rem;color:var(--gray);">${c.subject_area}</td>
-      <td><span class="sb ${c.status==="Pass"?"sp":"sf"}">${c.status}</span></td>
-      <td>${fmtDate(c.cert_date.slice?c.cert_date.slice(0,10):c.cert_date)}</td>
-    </tr>`).join("");
-    const histRows = (s.history||[]).map(h=>`<tr><td>${new Date(h.generated_at).toLocaleDateString()}</td><td>${h.filename}</td><td>${h.generated_by||"Admin"}</td></tr>`).join("");
-    document.getElementById("mcnt").innerHTML = `
-      <p style="margin-bottom:12px;font-size:.84rem;color:var(--gray);">
-        <span class="tag ${s.path==="pre"?"tp":"ti"}">${s.path_label}</span>
-        ${s.cert_count||0} certificates${s.center?" &nbsp;·&nbsp; "+s.center:""}
-      </p>
-      <div style="overflow-x:auto;max-height:320px;">
-      <table><thead><tr><th>#</th><th>Course</th><th>CDA Subject Area</th><th>Status</th><th>Date</th></tr></thead>
-      <tbody>${rows}</tbody></table></div>
-      ${histRows ? `<h3 style="font-family:'Playfair Display',serif;margin:16px 0 8px;">Generation History</h3>
-      <table><thead><tr><th>Date</th><th>Filename</th><th>Generated By</th></tr></thead><tbody>${histRows}</tbody></table>` : ""}`;
-    document.getElementById("mdel").onclick = () => { if(confirm("Delete all records for "+s.name+"?")) delStu(s.id); };
-    document.getElementById("mredl").onclick = () => redownload(s);
-    document.getElementById("smod").classList.add("open");
-  } catch(e) {
-    alert2("err","Could not load student details.");
-  }
-}
-
-function closeMod() { document.getElementById("smod").classList.remove("open"); }
-document.getElementById("smod").addEventListener("click",function(e){if(e.target===this)closeMod();});
-
-async function delStu(id) {
-  try {
-    await fetch(`/api/students/${id}`,{method:"DELETE"});
-  } catch(e) {}
-  closeMod(); loadStudents(); loadStats();
-}
-
-async function redownload(s) {
-  dates = (s.certificates||[]).map(c=>({
-    course: c.course_name, area: AREAS.indexOf(c.subject_area),
-    assignedDate: c.cert_date.slice?c.cert_date.slice(0,10):c.cert_date,
-    status: c.status, adjusted:false, fromCSV:true
-  }));
-  document.getElementById("lname").value = s.name;
-  document.getElementById("cname").value = s.center||"";
-  pickPath(s.path);
-  closeMod(); tab("gen"); await sleep(80); await makePDF();
-}
-
-// ── INIT ──────────────────────────────────────────────────────
-loadAssets();
-updateBadge();
-</script>
-</body>
-</html>
+>
