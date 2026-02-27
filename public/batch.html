@@ -170,14 +170,14 @@
 <script>
 // ─── SUBJECT AREAS ───────────────────────────────────────────────────────────
 const SA = [
-  { label:'Planning a Safe, Healthy Learning Environment',              short:'Safe & Healthy',         col:'#2d6a9f' },
-  { label:'Advancing Children\'s Physical and Intellectual Development',short:'Physical & Intellectual', col:'#217a4e' },
-  { label:'Supporting Social and Emotional Development',                short:'Social & Emotional',     col:'#7a3d8c' },
-  { label:'Building Productive Family and Community Relationships',     short:'Family & Community',     col:'#b85c00' },
-  { label:'Ensuring Professionally and Ethically Sound Practice',       short:'Professional Ethics',    col:'#1a5978' },
-  { label:'Observing and Recording Children\'s Behavior',              short:'Observation & Records',  col:'#6b3a1f' },
-  { label:'Understanding Principles of Child Development',             short:'Child Development',      col:'#3d6b1a' },
-  { label:'Early Childhood Education Advocacy and Leadership',         short:'Advocacy & Leadership',  col:'#8c2d44' },
+  { label:'Planning a Safe and Healthy Learning Environment',              short:'Safe & Healthy',         col:'#2d6a9f' },
+  { label:"Advancing Children's Physical and Intellectual Development",    short:'Physical & Intellectual', col:'#217a4e' },
+  { label:"Supporting Children's Social and Emotional Development",        short:'Social & Emotional',     col:'#7a3d8c' },
+  { label:'Building Productive Relationships with Families',               short:'Family & Community',     col:'#b85c00' },
+  { label:'Managing an Effective Program Operation',                       short:'Program Management',     col:'#1a5978' },
+  { label:'Maintaining a Commitment to Professionalism',                   short:'Professionalism',        col:'#6b3a1f' },
+  { label:"Observing and Recording Children's Behavior",                   short:'Observation & Records',  col:'#3d6b1a' },
+  { label:'Understanding the Principles of Child Development and Learning',short:'Child Development',      col:'#8c2d44' },
 ];
 
 // ─── 40-COURSE ARRAY ─────────────────────────────────────────────────────────
@@ -561,12 +561,13 @@ async function startGeneration() {
 
       // Save to database — use the same matched array so area labels are correct
       const pathLabel = p==='PRE' ? 'Preschool CDA Training' : 'Infant and Toddler CDA Training';
-      const courses = matched.map(c => ({
+      // Only save courses the student actually completed — no fabricated incomplete entries
+      const courses = matched.filter(c => c.hit).map(c => ({
         course:    c.name,
-        area:      c.areaLabel,          // FIX: resolved label, never undefined
+        area:      c.areaLabel,
         areaIndex: c.area,
-        date:      c.date,               // FIX: uses final unique date
-        status:    c.hit ? 'Pass' : 'Incomplete'
+        date:      c.date,
+        status:    'Pass'
       }));
 
       try {
