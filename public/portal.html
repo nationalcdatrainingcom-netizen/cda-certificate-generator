@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My CDA Training Portal — National CDA Training</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:   #1a2744;
+  --blue:   #1e64b4;
+  --gold:   #c9a84c;
+  --gold-lt:#e8d5a3;
+  --cream:  #faf8f3;
+  --border: #e5e0d5;
+  --gray:   #6b7280;
+  --green:  #166534;
+  --green-bg:#dcfce7;
+  --err:    #991b1b;
+  --err-bg: #fee2e2;
+  --shad:   0 8px 40px rgba(26,39,68,.13);
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+
+body {
+  font-family:'DM Sans',sans-serif;
+  background: var(--cream);
+  min-height:100vh;
+  color: var(--navy);
+}
+
+/* ── BACKGROUND TEXTURE ── */
+body::before {
+  content:'';
+  position:fixed; inset:0; z-index:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(201,168,76,.07) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 80% 90%, rgba(26,39,68,.06) 0%, transparent 60%);
+  pointer-events:none;
+}
+
+/* ── HEADER ── */
+header {
+  position:relative; z-index:1;
+  background: var(--navy);
+  padding:0 40px;
+  display:flex; align-items:center; justify-content:space-between;
+  height:68px;
+  box-shadow:0 2px 16px rgba(0,0,0,.25);
+}
+.hdr-brand { display:flex; align-items:center; gap:14px; }
+.hdr-brand img { height:40px; width:auto; display:none; }
+.hdr-title {
+  font-family:'Cormorant Garamond',serif;
+  color: var(--gold);
+  font-size:1.3rem; font-weight:600; letter-spacing:.01em;
+}
+.hdr-sub { color: var(--gold-lt); font-size:.78rem; }
+.hdr-nav { display:flex; gap:20px; align-items:center; }
+.hdr-nav a {
+  color: var(--gold-lt); text-decoration:none;
+  font-size:.82rem; opacity:.8; transition:.15s;
+}
+.hdr-nav a:hover { opacity:1; }
+
+/* ── MAIN LAYOUT ── */
+main {
+  position:relative; z-index:1;
+  max-width:720px; margin:0 auto;
+  padding:52px 24px 80px;
+}
+
+/* ── LOGIN CARD ── */
+.login-wrap {
+  text-align:center;
+  animation: fadeUp .5s ease both;
+}
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(20px); }
+  to   { opacity:1; transform:translateY(0);    }
+}
+
+.login-icon {
+  width:72px; height:72px; border-radius:50%;
+  background:linear-gradient(135deg, var(--navy) 0%, #2a3f6e 100%);
+  border:3px solid var(--gold);
+  display:flex; align-items:center; justify-content:center;
+  margin:0 auto 24px;
+  font-size:1.8rem;
+}
+
+.login-wrap h1 {
+  font-family:'Cormorant Garamond',serif;
+  font-size:2rem; font-weight:700;
+  color: var(--navy);
+  margin-bottom:8px;
+}
+.login-wrap p {
+  color: var(--gray); font-size:.95rem; line-height:1.6;
+  max-width:400px; margin:0 auto 36px;
+}
+
+.card {
+  background:#fff;
+  border-radius:16px;
+  border:1px solid var(--border);
+  box-shadow: var(--shad);
+  padding:36px 40px;
+  text-align:left;
+}
+
+.field { margin-bottom:20px; }
+.field label {
+  display:block;
+  font-size:.8rem; font-weight:600;
+  color: var(--navy);
+  text-transform:uppercase; letter-spacing:.06em;
+  margin-bottom:7px;
+}
+.field input {
+  width:100%;
+  padding:12px 16px;
+  border:1.5px solid var(--border);
+  border-radius:8px;
+  font-family:'DM Sans',sans-serif;
+  font-size:.95rem; color: var(--navy);
+  background:#fdfcf9;
+  transition:.18s;
+}
+.field input:focus {
+  outline:none;
+  border-color: var(--gold);
+  box-shadow:0 0 0 3px rgba(201,168,76,.15);
+  background:#fff;
+}
+
+.btn {
+  width:100%;
+  padding:14px;
+  background: var(--navy);
+  color:#fff;
+  border:none; border-radius:8px;
+  font-family:'DM Sans',sans-serif;
+  font-size:.95rem; font-weight:600;
+  cursor:pointer;
+  transition:.18s;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.btn:hover:not(:disabled) {
+  background:#243160;
+  transform:translateY(-1px);
+  box-shadow:0 4px 16px rgba(26,39,68,.25);
+}
+.btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+.btn-gold {
+  background: var(--gold); color: var(--navy);
+}
+.btn-gold:hover:not(:disabled) { background:#b8963e; }
+.btn-sm {
+  width:auto; padding:9px 20px; font-size:.85rem;
+}
+
+.alert {
+  padding:13px 16px; border-radius:8px;
+  font-size:.88rem; margin-bottom:20px;
+  border:1px solid transparent;
+}
+.alert-ok  { background: var(--green-bg); color: var(--green);  border-color:#86efac; }
+.alert-err { background: var(--err-bg);   color: var(--err);    border-color:#fca5a5; }
+.alert-info{ background:#eff6ff; color:#1e40af; border-color:#bfdbfe; }
+
+/* ── PORTAL / RESULTS ── */
+#portal-view { animation: fadeUp .4s ease both; }
+
+.portal-header {
+  margin-bottom:32px;
+}
+.portal-header h2 {
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.7rem; font-weight:700;
+  color: var(--navy); margin-bottom:4px;
+}
+.portal-header p { color: var(--gray); font-size:.9rem; }
+
+.record-block {
+  background:#fff;
+  border-radius:14px;
+  border:1px solid var(--border);
+  box-shadow:0 4px 20px rgba(26,39,68,.08);
+  margin-bottom:24px;
+  overflow:hidden;
+}
+.record-head {
+  background:linear-gradient(135deg,var(--navy) 0%,#243160 100%);
+  padding:20px 26px;
+  display:flex; align-items:center; gap:16px;
+}
+.record-avatar {
+  width:46px; height:46px; border-radius:50%;
+  background: var(--gold); color: var(--navy);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.3rem; font-weight:700; flex-shrink:0;
+}
+.record-info h3 {
+  color:#fff; font-size:1rem; font-weight:600; margin-bottom:2px;
+}
+.record-info p { color: var(--gold-lt); font-size:.8rem; }
+
+.record-body { padding:22px 26px; }
+
+/* Package list */
+.pkg-list { list-style:none; display:grid; gap:10px; }
+.pkg-item {
+  display:flex; align-items:center; gap:14px;
+  padding:14px 16px;
+  background: var(--cream);
+  border:1px solid var(--border);
+  border-radius:10px;
+  transition:.15s;
+}
+.pkg-item:hover { border-color: var(--gold); background:#fdf9f0; }
+.pkg-icon { font-size:1.5rem; flex-shrink:0; }
+.pkg-info { flex:1; min-width:0; }
+.pkg-info strong {
+  display:block; font-size:.9rem; font-weight:600;
+  color: var(--navy);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.pkg-info span { font-size:.76rem; color: var(--gray); }
+.pkg-badge {
+  display:inline-flex; align-items:center;
+  padding:3px 10px; border-radius:20px;
+  font-size:.7rem; font-weight:700;
+  background:#dbeafe; color:#1e40af;
+  flex-shrink:0;
+}
+.pkg-badge.inf { background:#fce7f3; color:#9d174d; }
+
+.download-btn {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:8px 16px;
+  background: var(--navy); color:#fff;
+  border:none; border-radius:7px;
+  font-family:'DM Sans',sans-serif;
+  font-size:.8rem; font-weight:600;
+  cursor:pointer; text-decoration:none;
+  transition:.15s; flex-shrink:0;
+}
+.download-btn:hover { background: var(--blue); }
+.download-btn.unavailable {
+  background:#e5e0d5; color: var(--gray); cursor:default;
+}
+
+.no-packages {
+  text-align:center; padding:24px;
+  color: var(--gray); font-size:.9rem;
+  font-style:italic;
+}
+
+/* spinner */
+.spin {
+  display:inline-block; width:18px; height:18px;
+  border:2.5px solid rgba(255,255,255,.3);
+  border-top-color:#fff; border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* divider */
+.divider {
+  border:none; border-top:1px solid var(--border);
+  margin:22px 0;
+}
+
+.footer-note {
+  text-align:center; font-size:.78rem; color: var(--gray);
+  margin-top:40px; line-height:1.6;
+}
+
+@media(max-width:600px) {
+  header { padding:0 18px; }
+  main   { padding:32px 16px 60px; }
+  .card  { padding:24px 20px; }
+  .record-head { padding:16px 18px; }
+  .record-body { padding:16px 18px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr-brand">
+    <img id="hdr-logo" src="" alt="National CDA Training">
+    <div>
+      <div class="hdr-title">National CDA Training</div>
+      <div class="hdr-sub">Student Certificate Portal</div>
+    </div>
+  </div>
+  <nav class="hdr-nav">
+    <a href="/">Admin</a>
+    <a href="/batch.html">Batch</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ── LOGIN VIEW ── -->
+  <div id="login-view">
+    <div class="login-wrap">
+      <div class="login-icon">🎓</div>
+      <h1>Access Your Certificates</h1>
+      <p>Enter your name and the email address you used for your CDA training. We'll send you a secure link to view and download your certificates.</p>
+
+      <div class="card">
+        <div id="login-alert" style="display:none"></div>
+
+        <div class="field">
+          <label>Full Name</label>
+          <input type="text" id="inp-name" placeholder="As it appears on your certificates"
+                 autocomplete="name">
+        </div>
+        <div class="field">
+          <label>Email Address</label>
+          <input type="email" id="inp-email" placeholder="Email used during training"
+                 autocomplete="email">
+        </div>
+        <button class="btn" id="login-btn" onclick="requestLink()">
+          <span id="login-btn-text">Send My Access Link</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PORTAL VIEW (after token verified) ── -->
+  <div id="portal-view" style="display:none">
+    <div class="portal-header">
+      <h2>Your Training Records</h2>
+      <p id="portal-email-line">Signed in as <strong></strong></p>
+    </div>
+    <div id="records-list"></div>
+    <p class="footer-note">
+      National CDA Training &nbsp;|&nbsp; 4775 Erie Drive, Buchanan, MI 49107<br>
+      866-726-3056 &nbsp;|&nbsp; Mary@NationalCDATraining.com
+    </p>
+  </div>
+
+</main>
+
+<script>
+let SESSION_EMAIL = '';
+
+// ── LOAD LOGO ────────────────────────────────────────────────
+fetch('/api/assets').then(r => r.json()).then(d => {
+  if (d.logo) {
+    const img = document.getElementById('hdr-logo');
+    img.src = d.logo; img.style.display = 'block';
+  }
+}).catch(() => {});
+
+// ── ON LOAD: check for token in URL ──────────────────────────
+window.addEventListener('load', () => {
+  const params = new URLSearchParams(location.search);
+  const token  = params.get('token');
+  if (token) verifyToken(token);
+
+  // Allow Enter key on inputs
+  ['inp-name','inp-email'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if (e.key === 'Enter') requestLink();
+    });
+  });
+});
+
+// ── REQUEST MAGIC LINK ────────────────────────────────────────
+async function requestLink() {
+  const name  = document.getElementById('inp-name').value.trim();
+  const email = document.getElementById('inp-email').value.trim();
+
+  if (!name || !email) {
+    showAlert('login-alert', 'err', 'Please enter both your name and email address.');
+    return;
+  }
+  if (!email.includes('@')) {
+    showAlert('login-alert', 'err', 'Please enter a valid email address.');
+    return;
+  }
+
+  setLoginLoading(true);
+  hideAlert('login-alert');
+
+  try {
+    const res = await fetch('/api/auth/request', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ name, email })
+    });
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || 'Request failed');
+
+    showAlert('login-alert', 'ok',
+      '✓ Check your inbox! We sent a secure access link to <strong>' +
+      escHtml(email) + '</strong>. It expires in 30 minutes.');
+    document.getElementById('login-btn').disabled = true;
+  } catch (e) {
+    showAlert('login-alert', 'err', e.message);
+  } finally {
+    setLoginLoading(false);
+  }
+}
+
+// ── VERIFY TOKEN FROM URL ─────────────────────────────────────
+async function verifyToken(token) {
+  try {
+    const res  = await fetch('/api/auth/verify/' + encodeURIComponent(token));
+    const data = await res.json();
+
+    if (!res.ok) {
+      showAlert('login-alert', 'err',
+        '⚠️ ' + (data.error || 'This link has expired or already been used.') +
+        ' Please request a new one below.');
+      return;
+    }
+
+    // Clear token from URL without reload
+    history.replaceState({}, '', '/portal');
+
+    SESSION_EMAIL = data.email;
+    renderPortal(data);
+  } catch (e) {
+    showAlert('login-alert', 'err', 'Verification failed. Please try again.');
+  }
+}
+
+// ── RENDER PORTAL ─────────────────────────────────────────────
+function renderPortal(data) {
+  document.getElementById('login-view').style.display  = 'none';
+  document.getElementById('portal-view').style.display = 'block';
+
+  document.querySelector('#portal-email-line strong').textContent = data.email;
+
+  const list = document.getElementById('records-list');
+  list.innerHTML = '';
+
+  if (!data.students || !data.students.length) {
+    list.innerHTML = '<div class="card"><p class="no-packages">No training records found for this email.</p></div>';
+    return;
+  }
+
+  data.students.forEach(student => {
+    const block = document.createElement('div');
+    block.className = 'record-block';
+
+    const initial = student.name.charAt(0).toUpperCase();
+    const pathLabel = student.path_label || (student.path === 'pre' ? 'Preschool CDA' : 'Infant & Toddler CDA');
+    const badgeCls  = student.path === 'inf' ? 'inf' : '';
+
+    // Package list
+    let pkgsHTML = '';
+    if (!student.packages || !student.packages.length) {
+      pkgsHTML = '<p class="no-packages">No downloadable packages on file yet.</p>';
+    } else {
+      pkgsHTML = '<ul class="pkg-list">' +
+        student.packages.map(pkg => {
+          const date = new Date(pkg.generated_at).toLocaleDateString('en-US',
+            {month:'short', day:'numeric', year:'numeric'});
+          const hasPDF  = pkg.has_pdf;
+          const dlUrl   = `/api/portal/pdf/${pkg.id}?email=${encodeURIComponent(SESSION_EMAIL)}&token=session`;
+          const dlBtn   = hasPDF
+            ? `<a class="download-btn" href="${dlUrl}" download="${escAttr(pkg.filename || 'package.pdf')}">⬇ Download PDF</a>`
+            : `<span class="download-btn unavailable">Not stored</span>`;
+          const label   = pkg.filename
+            ? pkg.filename.replace(/_/g,' ').replace('.pdf','')
+            : 'CDA Package';
+
+          return `<li class="pkg-item">
+            <span class="pkg-icon">📄</span>
+            <div class="pkg-info">
+              <strong>${escHtml(label)}</strong>
+              <span>Generated ${escHtml(date)} by ${escHtml(pkg.generated_by || 'Admin')}</span>
+            </div>
+            ${dlBtn}
+          </li>`;
+        }).join('') +
+      '</ul>';
+    }
+
+    block.innerHTML = `
+      <div class="record-head">
+        <div class="record-avatar">${initial}</div>
+        <div class="record-info">
+          <h3>${escHtml(student.name)}</h3>
+          <p>${escHtml(pathLabel)} &nbsp;·&nbsp; ${student.course_count || 0} courses &nbsp;·&nbsp; 120 hours</p>
+        </div>
+        <span class="pkg-badge ${badgeCls}" style="margin-left:auto">
+          ${student.path === 'pre' ? 'Preschool' : 'Infant & Toddler'}
+        </span>
+      </div>
+      <div class="record-body">
+        <p style="font-size:.82rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--gray);margin-bottom:12px;">
+          Certificate Packages
+        </p>
+        ${pkgsHTML}
+      </div>`;
+
+    list.appendChild(block);
+  });
+}
+
+// ── HELPERS ──────────────────────────────────────────────────
+function setLoginLoading(on) {
+  const btn  = document.getElementById('login-btn');
+  const text = document.getElementById('login-btn-text');
+  btn.disabled  = on;
+  text.innerHTML = on
+    ? '<span class="spin"></span> Sending…'
+    : 'Send My Access Link';
+}
+
+function showAlert(id, type, msg) {
+  const el = document.getElementById(id);
+  const cls = {ok:'alert-ok', err:'alert-err', info:'alert-info'}[type] || 'alert-info';
+  el.className = 'alert ' + cls;
+  el.innerHTML = msg;
+  el.style.display = 'block';
+}
+function hideAlert(id) {
+  const el = document.getElementById(id);
+  el.style.display = 'none';
+}
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) {
+  return String(s).replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
