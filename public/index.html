@@ -691,12 +691,16 @@ function drawCert(doc,W,H,name,row,pLabel,sigImg,logoImg){
   doc.text("4775 Erie Drive, Buchanan, MI 49107",42,y+26);
   doc.text("Phone: 866-726-3056  |  Mary@NationalCDATraining.com",42,y+38);
 
-  // Right: signature image + line + full title
+  // Right: signature image + line + title
   if(sigImg){ doc.addImage(SIG,"JPEG",W-230,y,170,53); }
   doc.setDrawColor(26,39,68); doc.setLineWidth(1);
   doc.line(W-234,y+56,W-28,y+56);
-  doc.setFontSize(8); doc.setFont("helvetica","bold"); doc.setTextColor(26,39,68);
-  doc.text("Mary Wardlaw, Educational Specialist - Instructor of Record",W-234,y+66);
+  doc.setFontSize(8.5); doc.setFont("helvetica","bold"); doc.setTextColor(26,39,68);
+  doc.text("Mary Wardlaw, President — Authorized Signature",W-234,y+66);
+
+  // Contributors reference (bottom center, small italic)
+  doc.setFontSize(7.5); doc.setFont("helvetica","italic"); doc.setTextColor(130,130,130);
+  doc.text("This course was developed and delivered by a team of contributors. See cover page for full contributor credits.",W/2,H-30,{align:"center"});
 }
 
 
