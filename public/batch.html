@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CDA Batch Package Generator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+3:wght@300;400;600&display=swap');
+
+  :root {
+    --navy:   #1a2744;
+    --gold:   #c49a2a;
+    --gold-l: #e8c766;
+    --cream:  #faf8f3;
+    --mid:    #6b7a99;
+    --ok:     #2d7a4f;
+    --warn:   #b85c1a;
+    --border: #d4cdb8;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Source Sans 3', sans-serif; background: var(--cream); color: var(--navy); min-height: 100vh; }
+
+  header {
+    background: var(--navy);
+    padding: 24px 48px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    border-bottom: 3px solid var(--gold);
+  }
+  header .badge { width: 44px; height: 44px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  header h1 { font-family: 'Playfair Display', serif; font-size: 1.35rem; color: #fff; }
+  header p { color: var(--gold-l); font-size: 0.75rem; font-weight: 300; letter-spacing: 0.08em; text-transform: uppercase; }
+
+  main { max-width: 980px; margin: 0 auto; padding: 44px 24px; }
+
+  #dropzone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    background: #fff;
+    padding: 52px 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    position: relative;
+  }
+  #dropzone:hover, #dropzone.dragover { border-color: var(--gold); background: #fffcf3; }
+  #dropzone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  #dropzone .drop-icon { font-size: 38px; margin-bottom: 10px; }
+  #dropzone h2 { font-family: 'Playfair Display', serif; font-size: 1.2rem; margin-bottom: 6px; }
+  #dropzone p { color: var(--mid); font-size: 0.88rem; }
+
+  #summary { display: none; margin-top: 28px; background: #fff; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+  .sum-head { background: var(--navy); color: #fff; padding: 18px 26px; display: flex; justify-content: space-between; align-items: center; }
+  .sum-head h3 { font-family: 'Playfair Display', serif; font-size: 1rem; }
+  .sum-head span { font-size: 0.78rem; opacity: .65; }
+
+  .stat-row { display: grid; grid-template-columns: repeat(4,1fr); border-bottom: 1px solid var(--border); }
+  .stat-box { padding: 18px 20px; border-right: 1px solid var(--border); text-align: center; }
+  .stat-box:last-child { border-right: none; }
+  .stat-num { font-family: 'Playfair Display', serif; font-size: 1.9rem; color: var(--navy); }
+  .stat-lbl { font-size: 0.7rem; color: var(--mid); text-transform: uppercase; letter-spacing: .07em; margin-top: 2px; }
+
+  .tbl-wrap { overflow-x: auto; max-height: 340px; overflow-y: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.855rem; }
+  thead th {
+    background: #f3f1eb;
+    padding: 9px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--mid);
+    position: sticky; top: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr { border-bottom: 1px solid #f0ede4; }
+  tbody tr:hover { background: #faf8f2; }
+  tbody td { padding: 9px 14px; }
+
+  .b-dual { display: inline-block; background: #e8f4ed; color: var(--ok); border-radius: 4px; font-size: .68rem; padding: 2px 6px; font-weight: 600; }
+  .b-path { display: inline-block; background: #eef0f8; color: var(--navy); border-radius: 4px; font-size: .68rem; padding: 2px 6px; margin: 1px; }
+  .b-count { display: inline-block; background: var(--navy); color: var(--gold-l); border-radius: 20px; font-size: .72rem; padding: 1px 9px; font-weight: 600; }
+
+  .actions { padding: 18px 26px; display: flex; gap: 10px; align-items: center; border-top: 1px solid var(--border); background: #faf8f3; }
+  .btn { display: inline-flex; align-items: center; gap: 7px; padding: 11px 24px; border-radius: 8px; font-family: 'Source Sans 3', sans-serif; font-size: .88rem; font-weight: 600; cursor: pointer; border: none; transition: all .18s; letter-spacing: .02em; }
+  .btn-primary { background: var(--navy); color: #fff; }
+  .btn-primary:hover:not(:disabled) { background: #243464; }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-ghost { background: transparent; color: var(--mid); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--navy); color: var(--navy); }
+
+  #prog { display: none; margin-top: 22px; background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 26px; }
+  #prog h3 { font-family: 'Playfair Display', serif; margin-bottom: 14px; font-size: .98rem; }
+  .bar-wrap { background: #f0ede4; border-radius: 8px; height: 9px; overflow: hidden; margin-bottom: 8px; }
+  .bar-fill { height: 100%; background: linear-gradient(90deg, var(--navy), var(--gold)); border-radius: 8px; transition: width .3s ease; width: 0%; }
+  #prog-lbl { font-size: .82rem; color: var(--mid); }
+  #log { margin-top: 14px; background: #1a2744; border-radius: 8px; padding: 14px; max-height: 190px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: .76rem; color: #8ba0c8; line-height: 1.65; }
+  #log .ok { color: #6bcf8b; } #log .sk { color: #f0a04a; } #log .info { color: #8ba0c8; }
+
+  #done { display: none; margin-top: 22px; background: #fff; border: 1px solid #b8dfc8; border-radius: 12px; padding: 30px; text-align: center; }
+  #done .di { font-size: 44px; margin-bottom: 10px; }
+  #done h3 { font-family: 'Playfair Display', serif; font-size: 1.35rem; color: var(--ok); margin-bottom: 6px; }
+  #done p { color: var(--mid); font-size: .88rem; margin-bottom: 18px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">🎓</div>
+  <div>
+    <h1>National CDA Training — Batch Package Generator</h1>
+    <p>Generate all learner certificate packages from a single activity report CSV</p>
+  </div>
+</header>
+
+<main>
+  <div id="dropzone">
+    <input type="file" accept=".csv" id="csvFile">
+    <div class="drop-icon">📄</div>
+    <h2>Drop Activity Report CSV here</h2>
+    <p>or click to browse &nbsp;·&nbsp; Standard LearnDash / training platform export</p>
+  </div>
+
+  <div id="summary">
+    <div class="sum-head">
+      <h3>Learner Summary</h3>
+      <span id="fname"></span>
+    </div>
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-num" id="s-learn">—</div><div class="stat-lbl">Learners</div></div>
+      <div class="stat-box"><div class="stat-num" id="s-pkg">—</div><div class="stat-lbl">Packages</div></div>
+      <div class="stat-box"><div class="stat-num" id="s-dual">—</div><div class="stat-lbl">Dual-Path</div></div>
+      <div class="stat-box"><div class="stat-num" id="s-skip">—</div><div class="stat-lbl">Skipped</div></div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Name</th><th>Email</th><th>Path(s)</th><th>Completed</th><th>Output</th>
+        </tr></thead>
+        <tbody id="tbl"></tbody>
+      </table>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" id="genBtn" onclick="startGeneration()">⚡ Generate All Packages</button>
+      <button class="btn btn-ghost" onclick="resetTool()">✕ Clear</button>
+      <span style="margin-left:auto;font-size:.8rem;color:var(--mid);">One PDF per learner · Delivered as a ZIP</span>
+    </div>
+  </div>
+
+  <div id="prog">
+    <h3>Generating Packages…</h3>
+    <div class="bar-wrap"><div class="bar-fill" id="bar"></div></div>
+    <div id="prog-lbl">Starting…</div>
+    <div id="log"></div>
+  </div>
+
+  <div id="done">
+    <div class="di">✅</div>
+    <h3>All Packages Generated!</h3>
+    <p id="done-msg"></p>
+    <button class="btn btn-primary" id="dlBtn">⬇ Download ZIP</button>
+  </div>
+</main>
+
+<script>
+// ─── SUBJECT AREAS ───────────────────────────────────────────────────────────
+const SA = [
+  { label:'Planning a Safe, Healthy Learning Environment',              short:'Safe & Healthy',         col:'#2d6a9f' },
+  { label:'Advancing Children\'s Physical and Intellectual Development',short:'Physical & Intellectual', col:'#217a4e' },
+  { label:'Supporting Social and Emotional Development',                short:'Social & Emotional',     col:'#7a3d8c' },
+  { label:'Building Productive Family and Community Relationships',     short:'Family & Community',     col:'#b85c00' },
+  { label:'Ensuring Professionally and Ethically Sound Practice',       short:'Professional Ethics',    col:'#1a5978' },
+  { label:'Observing and Recording Children\'s Behavior',              short:'Observation & Records',  col:'#6b3a1f' },
+  { label:'Understanding Principles of Child Development',             short:'Child Development',      col:'#3d6b1a' },
+  { label:'Early Childhood Education Advocacy and Leadership',         short:'Advocacy & Leadership',  col:'#8c2d44' },
+];
+
+// ─── 40-COURSE ARRAY (shared for both PRE and INF paths) ─────────────────────
+const COURSES = [
+  { name:'Early Education Essentials',               hours:3, area:0, kw:['early education essentials'] },
+  { name:'Space Planning in the Preschool Classroom',hours:3, area:0, kw:['space planning'] },
+  { name:'Materials in the Preschool Classroom',     hours:3, area:0, kw:['materials in the preschool'] },
+  { name:'Nutrition',                                hours:3, area:0, kw:['nutrition'] },
+  { name:'Active Supervision',                       hours:3, area:0, kw:['active supervision'] },
+  { name:'Physical Development in Preschool',        hours:3, area:1, kw:['physical development'] },
+  { name:'Language & Literacy in Preschool',         hours:3, area:1, kw:['language','literacy'] },
+  { name:'The Arts for Preschoolers',                hours:3, area:1, kw:['arts for preschool','the arts'] },
+  { name:'Science and Math for Preschool',           hours:3, area:1, kw:['science and math'] },
+  { name:'Preschool Dual Language and Technology',   hours:3, area:1, kw:['dual language','technology'] },
+  { name:'Preschool Social Development',             hours:3, area:2, kw:['social development'] },
+  { name:'Preschool Self Concept',                   hours:3, area:2, kw:['self concept'] },
+  { name:'Adult Modeling for Preschool',             hours:3, area:2, kw:['adult modeling'] },
+  { name:'Preschool Guidance',                       hours:3, area:2, kw:['guidance'] },
+  { name:'Cultural Identity in Preschool',           hours:3, area:2, kw:['cultural identity'] },
+  { name:'Building Productive Relationships Part 1', hours:3, area:3, kw:['relationships part 1','productive relationships part 1'] },
+  { name:'Building Productive Relationships Part 2', hours:3, area:3, kw:['relationships part 2','productive relationships part 2'] },
+  { name:'Building Productive Relationships Part 3', hours:3, area:3, kw:['relationships part 3','productive relationships part 3'] },
+  { name:'Building Productive Relationships Part 4', hours:3, area:3, kw:['relationships part 4','productive relationships part 4'] },
+  { name:'Building Productive Relationships Part 5', hours:3, area:3, kw:['relationships part 5','productive relationships part 5'] },
+  { name:'Community Partnerships',                   hours:3, area:3, kw:['community partnerships'] },
+  { name:'Effective Communication with Coworkers',   hours:3, area:4, kw:['effective communication'] },
+  { name:'Preparing for Substitutes',                hours:3, area:4, kw:['substitutes'] },
+  { name:'Professional Development',                 hours:3, area:4, kw:['professional development'] },
+  { name:'Ethics in Early Childhood',                hours:3, area:4, kw:['ethics'] },
+  { name:'Record Keeping',                           hours:3, area:5, kw:['record keeping'] },
+  { name:'Reporting',                                hours:3, area:5, kw:['reporting'] },
+  { name:'Objective Observation',                    hours:3, area:5, kw:['objective observation','observation'] },
+  { name:'Assessment',                               hours:3, area:5, kw:['assessment'] },
+  { name:'Planning from Assessment',                 hours:3, area:5, kw:['planning from assessment'] },
+  { name:'Theory Application – Jean Piaget',         hours:3, area:6, kw:['piaget'] },
+  { name:'Theory Application – Lev Vygotsky',        hours:3, area:6, kw:['vygotsky'] },
+  { name:'Theory Application – Erik Erikson',        hours:3, area:6, kw:['erikson'] },
+  { name:'Theory Application – Maria Montessori',    hours:3, area:6, kw:['montessori'] },
+  { name:'Theory Application – Urie Bronfenbrenner', hours:3, area:6, kw:['bronfenbrenner'] },
+  { name:'Developmental Delays',                     hours:3, area:6, kw:['developmental delays'] },
+  { name:'Intervention-Special Needs',               hours:3, area:6, kw:['intervention','special needs'] },
+  { name:'Advocacy in Early Childhood',              hours:3, area:7, kw:['advocacy'] },
+  { name:'Goal Setting in Early Childhood Classrooms',hours:3,area:7, kw:['goal setting'] },
+  { name:'Networking in the Early Childhood Profession',hours:3,area:7,kw:['networking'] },
+];
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+const norm = s => (s||'').toLowerCase().replace(/[–—]/g,'-').replace(/\s+/g,' ').trim();
+const matchKW = (title, kw) => kw.some(k => norm(title).includes(k));
+const hex2rgb = h => [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
+
+function newestDate(arr) { return arr.slice().sort().at(-1); }
+
+function shiftUnique(dates) {
+  const used = new Set();
+  return dates.map(d => {
+    let c = d, n = 0;
+    while (used.has(c)) {
+      n--;
+      const dt = new Date(d+'T12:00:00');
+      dt.setDate(dt.getDate()+n);
+      c = dt.toISOString().slice(0,10);
+    }
+    used.add(c);
+    return c;
+  });
+}
+
+function fmtDate(iso) {
+  if (!iso) return '';
+  const [y,m,d] = iso.split('-');
+  const MO = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return `${MO[+m-1]} ${+d}, ${y}`;
+}
+
+// ─── CSV PARSING ──────────────────────────────────────────────────────────────
+let LEARNERS = [];
+let ZIP_READY = null;
+let LOGO = null, SIG = null;
+
+function parseCSV(file) {
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    complete(r) { buildMap(r.data); }
+  });
+}
+
+function buildMap(rows) {
+  const map = {};
+  rows.forEach(row => {
+    const email  = (row['Email Address']||'').trim().toLowerCase();
+    const first  = (row['First Name']||'').trim();
+    const last   = (row['Last Name']||'').trim();
+    const grp    = (row['Groups']||'').trim();
+    const course = (row['Course']||'').trim();
+    const status = (row['Status']||'').trim().toLowerCase();
+    const date   = (row['Date']||'').trim();
+    if (!email) return;
+    if (!map[email]) map[email] = { email, name:`${first} ${last}`.trim(), groups:new Set(), done:{} };
+    if (grp) grp.split(',').forEach(g => map[email].groups.add(g.trim()));
+    const excl = norm(course).includes('cda introduction') || norm(course).includes('120 clock hours');
+    if (status==='completed' && course && !excl) {
+      if (!map[email].done[course]) map[email].done[course]=[];
+      if (date) map[email].done[course].push(date);
+    }
+  });
+
+  LEARNERS = Object.values(map).map(l => {
+    const gs   = [...l.groups];
+    const pre  = gs.some(g => /preschool cda/i.test(g));
+    const inf  = gs.some(g => /infant.*toddler/i.test(g));
+    const paths = [];
+    if (pre || (!pre && !inf)) paths.push('PRE');
+    if (inf) paths.push('INF');
+    const cnt = path => COURSES.filter(c => Object.keys(l.done).some(t => matchKW(t, c.kw))).length;
+    return { ...l, gs, pre, inf, paths, preN: cnt('PRE'), infN: cnt('INF') };
+  }).sort((a,b) => a.name.localeCompare(b.name));
+
+  renderSummary();
+}
+
+function renderSummary() {
+  const pkgs  = LEARNERS.reduce((s,l) => s + (l.paths.includes('PRE')&&l.preN>0?1:0) + (l.paths.includes('INF')&&l.infN>0?1:0), 0);
+  const dual  = LEARNERS.filter(l=>l.pre&&l.inf).length;
+  const skip  = LEARNERS.filter(l=>l.preN===0&&l.infN===0).length;
+  document.getElementById('s-learn').textContent = LEARNERS.length;
+  document.getElementById('s-pkg').textContent   = pkgs;
+  document.getElementById('s-dual').textContent  = dual;
+  document.getElementById('s-skip').textContent  = skip;
+
+  const tb = document.getElementById('tbl');
+  tb.innerHTML = '';
+  LEARNERS.forEach(l => {
+    const pathBadges = [
+      ...(l.paths.includes('PRE')&&l.preN>0 ? ['<span class="b-path">Preschool</span>'] : []),
+      ...(l.paths.includes('INF')&&l.infN>0 ? ['<span class="b-path">Infant &amp; Toddler</span>'] : []),
+    ].join(' ') || '<span style="color:var(--mid);font-size:.8rem">—</span>';
+
+    const cts = l.pre&&l.inf
+      ? `<span class="b-count">${l.preN} pre</span> <span class="b-count">${l.infN} inf</span>`
+      : `<span class="b-count">${Math.max(l.preN,l.infN)}</span>`;
+
+    const pkgN = (l.paths.includes('PRE')&&l.preN>0?1:0)+(l.paths.includes('INF')&&l.infN>0?1:0);
+    const pkgTxt = pkgN>0 ? pkgN+'&nbsp;PDF'+(pkgN>1?'s':'') : '<span style="color:var(--warn)">Skip</span>';
+
+    tb.insertAdjacentHTML('beforeend',`<tr>
+      <td>${l.pre&&l.inf?'<span class="b-dual">DUAL</span> ':''}${l.name}</td>
+      <td style="color:var(--mid);font-size:.8rem">${l.email}</td>
+      <td>${pathBadges}</td>
+      <td>${cts}</td>
+      <td>${pkgTxt}</td>
+    </tr>`);
+  });
+  document.getElementById('summary').style.display = 'block';
+}
+
+// ─── PDF BUILDER ──────────────────────────────────────────────────────────────
+function buildPDF(learner, pathKey) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'landscape', unit:'in', format:'letter' });
+  const W=11, H=8.5;
+  const nm = learner.name;
+  const isInf = pathKey==='INF';
+  const pathLabel = isInf ? 'Infant & Toddler CDA' : 'Preschool CDA';
+  const pathFull  = isInf ? 'Infant & Toddler Child Development Associate' : 'Preschool Child Development Associate';
+
+  // Match courses to completions
+  const matched = COURSES.map(c => {
+    const key = Object.keys(learner.done).find(t => matchKW(t, c.kw));
+    if (!key) return { ...c, date:null, hit:false };
+    return { ...c, date: newestDate(learner.done[key]), hit:true };
+  });
+
+  // Fallback dates for unmatched
+  const hitDates = matched.filter(m=>m.hit).map(m=>m.date);
+  let fb = hitDates.length ? newestDate(hitDates) : '2025-06-01';
+  matched.forEach(m => {
+    if (!m.hit) {
+      const dt = new Date(fb+'T12:00:00'); dt.setDate(dt.getDate()-3);
+      fb = dt.toISOString().slice(0,10);
+      m.date = fb;
+    }
+  });
+
+  // Unique dates
+  const uDates = shiftUnique(matched.map(m=>m.date));
+  matched.forEach((m,i) => m.date=uDates[i]);
+
+  // ── Cover Page ────────────────────────────────────────────────
+  doc.setFillColor(26,39,68); doc.rect(0,0,W,H,'F');
+  doc.setFillColor(196,154,42); doc.rect(0,H-1,W,1,'F');
+  if (LOGO) { try { doc.addImage(LOGO,'PNG',W/2-1,0.35,2,1.1); } catch(e){} }
+  const cy = LOGO ? 1.95 : 1.4;
+  doc.setFont('times','bold'); doc.setFontSize(10); doc.setTextColor(196,154,42);
+  doc.text('NATIONAL CDA TRAINING', W/2, cy, {align:'center'});
+  doc.setFontSize(21); doc.setTextColor(255,255,255);
+  doc.text('Certificate of Completion', W/2, cy+0.5, {align:'center'});
+  doc.setFontSize(9); doc.setTextColor(196,154,42);
+  doc.text(pathFull.toUpperCase(), W/2, cy+0.9, {align:'center'});
+  doc.setFont('times','normal'); doc.setFontSize(8.5); doc.setTextColor(170,188,218);
+  doc.text('This certifies that', W/2, cy+1.6, {align:'center'});
+  doc.setFont('times','bold'); doc.setFontSize(25); doc.setTextColor(255,255,255);
+  doc.text(nm, W/2, cy+2.2, {align:'center'});
+  doc.setFont('times','normal'); doc.setFontSize(8.5); doc.setTextColor(170,188,218);
+  doc.text('has successfully completed 120 clock hours of', W/2, cy+2.65, {align:'center'});
+  doc.setFontSize(11); doc.setTextColor(196,154,42);
+  doc.text(pathLabel+' Training', W/2, cy+3.0, {align:'center'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(255,255,255);
+  doc.text('National CDA Training  ·  nationalcdatraining.com', W/2, H-0.42, {align:'center'});
+
+  // ── Transcript Page ───────────────────────────────────────────
+  doc.addPage();
+  const mg=0.5;
+  doc.setFillColor(26,39,68); doc.rect(0,0,W,1.1,'F');
+  doc.setFont('times','bold'); doc.setFontSize(13); doc.setTextColor(255,255,255);
+  doc.text('Official Training Transcript', W/2, 0.46, {align:'center'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(196,154,42);
+  doc.text(pathLabel+' — 120 Clock Hours', W/2, 0.7, {align:'center'});
+  doc.setFontSize(7); doc.setTextColor(175,195,225);
+  doc.text(nm, W/2, 0.94, {align:'center'});
+
+  const TY=1.25;
+  doc.setFillColor(240,237,228); doc.rect(mg,TY,W-mg*2,0.26,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(80,80,80);
+  doc.text('#',   mg+0.08, TY+0.18);
+  doc.text('Course Title', mg+0.42, TY+0.18);
+  doc.text('Subject Area', mg+5.35, TY+0.18);
+  doc.text('Date',         mg+8.0,  TY+0.18);
+  doc.text('Hrs',          mg+9.35, TY+0.18);
+
+  const rH=0.162, rY=TY+0.26;
+  matched.forEach((c,i) => {
+    const y=rY+i*rH;
+    doc.setFillColor(...(i%2===0?[255,255,255]:[248,246,240]));
+    doc.rect(mg,y,W-mg*2,rH,'F');
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.2); doc.setTextColor(60,60,60);
+    doc.text(String(i+1).padStart(2,'0'), mg+0.08, y+rH-0.04);
+    doc.text(c.name,                      mg+0.42, y+rH-0.04);
+    const sa=SA[c.area]; doc.setTextColor(...hex2rgb(sa.col));
+    doc.text(sa.short,                    mg+5.35, y+rH-0.04);
+    doc.setTextColor(60,60,60);
+    doc.text(fmtDate(c.date),             mg+8.0,  y+rH-0.04);
+    doc.text('3',                         mg+9.5,  y+rH-0.04);
+  });
+  const fY=rY+matched.length*rH+0.1;
+  doc.setFillColor(26,39,68); doc.rect(mg,fY,W-mg*2,0.28,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(196,154,42);
+  doc.text('TOTAL: 120 CLOCK HOURS', W-mg-0.12, fY+0.19, {align:'right'});
+
+  // ── 40 Certificate Pages ──────────────────────────────────────
+  matched.forEach((c, idx) => {
+    doc.addPage();
+    const sa=SA[c.area]; const [r,g,b]=hex2rgb(sa.col);
+    doc.setFillColor(255,255,255); doc.rect(0,0,W,H,'F');
+    doc.setFillColor(r,g,b); doc.rect(0,0,W,0.82,'F');
+    doc.setFillColor(r,g,b); doc.rect(0,0,0.07,H,'F'); doc.rect(W-0.07,0,0.07,H,'F');
+
+    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(255,255,255);
+    doc.text(sa.label.toUpperCase(), W/2, 0.34, {align:'center'});
+    doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(255,255,255);
+    doc.text('CDA SUBJECT AREA '+(c.area+1)+' OF 8', W/2, 0.56, {align:'center'});
+
+    if (LOGO) { try { doc.addImage(LOGO,'PNG',W/2-0.65,0.92,1.3,0.72); } catch(e){} }
+    const cY2 = LOGO ? 2.0 : 1.55;
+
+    doc.setFont('times','italic'); doc.setFontSize(9); doc.setTextColor(120,120,120);
+    doc.text('This certifies that', W/2, cY2, {align:'center'});
+    doc.setFont('times','bold'); doc.setFontSize(22); doc.setTextColor(26,39,68);
+    doc.text(nm, W/2, cY2+0.58, {align:'center'});
+    const nw=doc.getTextWidth(nm);
+    doc.setDrawColor(196,154,42); doc.setLineWidth(0.018);
+    doc.line(W/2-nw/2-0.08, cY2+0.66, W/2+nw/2+0.08, cY2+0.66);
+
+    doc.setFont('times','normal'); doc.setFontSize(9); doc.setTextColor(100,100,100);
+    doc.text('has successfully completed', W/2, cY2+1.05, {align:'center'});
+
+    doc.setFont('times','bold'); doc.setFontSize(14); doc.setTextColor(r,g,b);
+    const split=doc.splitTextToSize(c.name, 6.5);
+    const cY3=cY2+1.48;
+    doc.text(split, W/2, cY3, {align:'center'});
+
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(100,100,100);
+    doc.text('3 Clock Hours  ·  '+pathLabel, W/2, cY3+split.length*0.2+0.22, {align:'center'});
+
+    const dY=H-1.6;
+    doc.setFont('times','italic'); doc.setFontSize(8.5); doc.setTextColor(100,100,100);
+    doc.text('Awarded: '+fmtDate(c.date), W/2, dY, {align:'center'});
+
+    if (SIG) { try { doc.addImage(SIG,'JPEG',W/2-0.85,dY+0.08,1.7,0.52); } catch(e){} }
+    doc.setDrawColor(160,160,160); doc.setLineWidth(0.01);
+    doc.line(W/2-1.4, dY+0.65, W/2+1.4, dY+0.65);
+    doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(26,39,68);
+    doc.text('National CDA Training', W/2, dY+0.82, {align:'center'});
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.2); doc.setTextColor(130,130,130);
+    doc.text('nationalcdatraining.com', W/2, dY+0.98, {align:'center'});
+
+    doc.setFillColor(196,154,42); doc.rect(0,H-0.16,W,0.16,'F');
+  });
+
+  return doc;
+}
+
+// ─── BATCH GENERATION ────────────────────────────────────────────────────────
+async function startGeneration() {
+  document.getElementById('genBtn').disabled = true;
+  document.getElementById('prog').style.display = 'block';
+  document.getElementById('done').style.display = 'none';
+  const logEl  = document.getElementById('log');
+  const barEl  = document.getElementById('bar');
+  const lblEl  = document.getElementById('prog-lbl');
+  logEl.innerHTML = '';
+
+  const lg = (msg, cls='info') => {
+    logEl.insertAdjacentHTML('beforeend',`<div class="${cls}">${msg}</div>`);
+    logEl.scrollTop = logEl.scrollHeight;
+  };
+
+  // Try to load assets from server
+  lg('Loading assets from /api/assets…');
+  try {
+    const res = await fetch('/api/assets');
+    if (res.ok) {
+      const d = await res.json();
+      LOGO = d.logo; SIG = d.signature;
+      lg('✓ Logo &amp; signature loaded', 'ok');
+    } else { throw new Error(); }
+  } catch(e) {
+    lg('⚠ Assets not available — PDFs will omit logo/signature', 'sk');
+  }
+
+  const zip = new JSZip();
+
+  // Build queue
+  const queue = [];
+  LEARNERS.forEach(l => {
+    if (l.paths.includes('PRE') && l.preN>0) queue.push({l, p:'PRE'});
+    if (l.paths.includes('INF') && l.infN>0) queue.push({l, p:'INF'});
+  });
+  const total=queue.length; let gen=0, err=0;
+  lg(`Starting: ${total} packages to generate…`);
+
+  for (let i=0; i<queue.length; i++) {
+    const {l, p} = queue[i];
+    const label  = p==='PRE' ? 'Preschool' : 'Infant-Toddler';
+    const safe   = l.name.replace(/[^a-z0-9 ]/gi,'').replace(/\s+/g,'_');
+    const fname  = `${safe}_${label}_CDA_Package.pdf`;
+    if (i%4===0) await new Promise(r=>setTimeout(r,0));
+    try {
+      const doc = buildPDF(l, p);
+      zip.file(fname, doc.output('arraybuffer'));
+      gen++;
+      lg(`✓ ${l.name} [${label}] — ${p==='PRE'?l.preN:l.infN} courses`, 'ok');
+    } catch(e) {
+      err++;
+      lg(`✗ ERROR: ${l.name} [${label}] — ${e.message}`, 'sk');
+    }
+    const pct=Math.round((i+1)/total*100);
+    barEl.style.width=pct+'%';
+    lblEl.textContent=`${i+1} of ${total} — ${pct}%`;
+  }
+
+  const skipN=LEARNERS.filter(l=>l.preN===0&&l.infN===0).length;
+  zip.file('README.txt',
+    `National CDA Training — Batch Package Export\n`+
+    `Generated: ${new Date().toLocaleString()}\n\n`+
+    `Total learners: ${LEARNERS.length}\n`+
+    `Packages generated: ${gen}${err?`\nErrors: ${err}`:''}\n`+
+    `Learners skipped (no completions): ${skipN}\n\n`+
+    `Each PDF contains:\n  • Cover page\n  • Official training transcript (40 courses)\n  • 40 individual course certificates\n`
+  );
+
+  ZIP_READY = zip;
+  lg(`\nComplete! ${gen} packages ready.`);
+  if (skipN) lg(`${skipN} learner(s) skipped (no completed courses).`, 'sk');
+
+  const doneEl = document.getElementById('done');
+  doneEl.style.display = 'block';
+  document.getElementById('done-msg').textContent =
+    `${gen} PDF package${gen!==1?'s':''} ready in one ZIP.`+
+    (skipN ? ` ${skipN} learner(s) skipped (no completions).` : '');
+
+  document.getElementById('dlBtn').onclick = async () => {
+    const blob = await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
+    const a = Object.assign(document.createElement('a'),{
+      href: URL.createObjectURL(blob),
+      download: `CDA_Packages_${new Date().toISOString().slice(0,10)}.zip`
+    });
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+}
+
+// ─── RESET ───────────────────────────────────────────────────────────────────
+function resetTool() {
+  LEARNERS=[]; ZIP_READY=null;
+  ['summary','prog','done'].forEach(id => document.getElementById(id).style.display='none');
+  document.getElementById('genBtn').disabled=false;
+  document.getElementById('csvFile').value='';
+}
+
+// ─── FILE INPUT / DRAG-DROP ───────────────────────────────────────────────────
+const dz = document.getElementById('dropzone');
+document.getElementById('csvFile').addEventListener('change', e => {
+  const f=e.target.files[0]; if(!f) return;
+  document.getElementById('fname').textContent=f.name;
+  parseCSV(f);
+});
+dz.addEventListener('dragover', e=>{e.preventDefault();dz.classList.add('dragover');});
+dz.addEventListener('dragleave', ()=>dz.classList.remove('dragover'));
+dz.addEventListener('drop', e=>{
+  e.preventDefault(); dz.classList.remove('dragover');
+  const f=e.dataTransfer.files[0];
+  if(f?.name.endsWith('.csv')) { document.getElementById('fname').textContent=f.name; parseCSV(f); }
+});
+</script>
+</body>
+</html>
