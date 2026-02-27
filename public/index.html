@@ -675,8 +675,8 @@ function drawTranscript(doc,W,H,name,pLabel){
   doc.text("Program: "+pLabel,40,120);
   doc.setFont("helvetica","normal");
   doc.text("Total Hours: 120  |  Courses: "+dates.length+"  |  Generated: "+new Date().toLocaleDateString(),W-40,106,{align:"right"});
-  const cw=[26,248,200,44,66,94];
-  const hds=["#","Course Title","CDA Subject Area","Hrs","Status","Date"];
+  const cw=[26,280,220,44,118];
+  const hds=["#","Course Title","CDA Subject Area","Hrs","Date"];
   let ty=134;
   doc.setFillColor(26,39,68);doc.rect(26,ty,W-52,16,"F");
   doc.setFontSize(7.5);doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);
@@ -692,7 +692,7 @@ function drawTranscript(doc,W,H,name,pLabel){
     doc.setFillColor(i%2===0?248:255,i%2===0?246:255,i%2===0?240:255);
     doc.rect(26,ty,W-52,14,"F");doc.setTextColor(50,50,50);
     tx=26;
-    [String(i+1),r.course,AREAS[r.area],"3",r.status,fmtDate(r.assignedDate)].forEach((c,ci)=>{
+    [String(i+1),r.course,AREAS[r.area],"3",fmtDate(r.assignedDate)].forEach((c,ci)=>{
       doc.text(doc.splitTextToSize(c,cw[ci]-5)[0],tx+3,ty+10);tx+=cw[ci];
     });
     doc.setDrawColor(215,210,200);doc.setLineWidth(.4);doc.line(26,ty+14,W-26,ty+14);ty+=14;
