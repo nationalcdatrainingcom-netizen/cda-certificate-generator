@@ -217,6 +217,22 @@ async function deleteStudent(id) {
   await pool.query('DELETE FROM students WHERE id = $1', [id]);
 }
 
+// ── BULK DELETE ───────────────────────────────────────────────
+// Deletes all students whose id is in the provided array.
+// Cascades to certificates and generated_packages automatically.
+async function deleteManyStudents(ids) {
+  if (!ids || !ids.length) return { deleted: 0 };
+  // Sanitise: ensure all values are integers
+  const clean = ids.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+  if (!clean.length) return { deleted: 0 };
+  const placeholders = clean.map((_, i) => `$${i + 1}`).join(', ');
+  const res = await pool.query(
+    `DELETE FROM students WHERE id IN (${placeholders})`,
+    clean
+  );
+  return { deleted: res.rowCount };
+}
+
 async function getStats() {
   const res = await pool.query(`
     SELECT
@@ -307,6 +323,7 @@ module.exports = {
   getPackagePDF,
   saveStudentPackage,
   deleteStudent,
+  deleteManyStudents,   // ← new
   getStats,
   createMagicToken,
   verifyMagicToken,
