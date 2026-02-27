@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>National CDA Training — Certificate Generator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#1a2744;--blue:#2962a3;--gold:#c9a84c;--gold-lt:#e8d5a3;--cream:#faf8f3;--white:#fff;--gray:#6b7280;--gray-lt:#f3f4f6;--border:#e5e0d5;--ok:#166534;--ok-bg:#dcfce7;--err:#991b1b;--err-bg:#fee2e2;--shad:0 4px 24px rgba(26,39,68,.10);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:"Source Sans 3",sans-serif;background:var(--cream);color:var(--navy);min-height:100vh;}
+header{background:var(--navy);padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:68px;box-shadow:0 2px 12px rgba(0,0,0,.2);}
+header h1{font-family:"Playfair Display",serif;color:var(--gold);font-size:1.3rem;}
+#hdr-img{height:44px;width:auto;margin-right:14px;}
+.hdr-left{display:flex;align-items:center;gap:0;}
+header small{color:var(--gold-lt);font-size:.8rem;opacity:.85;}
+nav{display:flex;background:#fff;border-bottom:2px solid var(--border);padding:0 40px;overflow-x:auto;}
+nav button{background:none;border:none;padding:15px 20px;font-family:"Source Sans 3",sans-serif;font-size:.9rem;font-weight:600;color:var(--gray);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:.18s;white-space:nowrap;}
+nav button.on{color:var(--navy);border-bottom-color:var(--gold);}
+nav button:hover:not(.on){color:var(--navy);}
+.badge{background:var(--gold);color:var(--navy);font-size:.7rem;font-weight:700;border-radius:9px;padding:1px 6px;margin-left:5px;}
+main{max-width:1080px;margin:0 auto;padding:32px 20px;}
+.card{background:#fff;border-radius:12px;border:1px solid var(--border);box-shadow:var(--shad);padding:26px 30px;margin-bottom:20px;}
+.card h2{font-family:"Playfair Display",serif;font-size:1.2rem;margin-bottom:5px;}
+.card .sub{color:var(--gray);font-size:.86rem;margin-bottom:18px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;}
+.fg{display:flex;flex-direction:column;gap:5px;}
+label{font-size:.8rem;font-weight:700;color:var(--navy);letter-spacing:.02em;text-transform:uppercase;}
+input[type=text],select{border:1.5px solid var(--border);border-radius:7px;padding:9px 13px;font-family:"Source Sans 3",sans-serif;font-size:.93rem;color:var(--navy);background:var(--cream);width:100%;transition:.18s;}
+input:focus,select:focus{outline:none;border-color:var(--gold);background:#fff;}
+.dz{border:2px dashed var(--border);border-radius:10px;padding:26px;text-align:center;cursor:pointer;transition:.18s;background:var(--cream);position:relative;}
+.dz:hover,.dz.over{border-color:var(--gold);background:#fdf9f0;}
+.dz input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;}
+.dz .ico{font-size:1.8rem;margin-bottom:5px;}
+.dz p{color:var(--gray);font-size:.86rem;}
+.dz p strong{color:var(--navy);}
+.dz.ok{border-color:var(--gold);background:#fdf9f0;}
+.dz.ok .lbl{color:var(--ok);font-weight:700;font-size:.86rem;margin-top:4px;}
+.paths{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.path{border:2px solid var(--border);border-radius:10px;padding:15px;cursor:pointer;text-align:center;background:var(--cream);transition:.18s;}
+.path:hover{border-color:var(--gold);}
+.path.sel{border-color:var(--gold);background:#fdf9f0;box-shadow:0 0 0 3px rgba(201,168,76,.18);}
+.path input{display:none;}
+.path h3{font-family:"Playfair Display",serif;font-size:.96rem;}
+.path p{font-size:.78rem;color:var(--gray);margin-top:3px;}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:11px 24px;border-radius:8px;font-family:"Source Sans 3",sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;border:none;transition:.18s;}
+.btn-nv{background:var(--navy);color:#fff;}
+.btn-nv:hover{background:#243160;transform:translateY(-1px);box-shadow:0 4px 12px rgba(26,39,68,.22);}
+.btn-go{background:var(--gold);color:var(--navy);}
+.btn-go:hover{background:#b8963e;transform:translateY(-1px);}
+.btn-ol{background:transparent;border:1.5px solid var(--border);color:var(--navy);}
+.btn-ol:hover{border-color:var(--gold);background:#fdf9f0;}
+.btn-del{background:transparent;border:1.5px solid #fca5a5;color:var(--err);font-size:.82rem;padding:7px 13px;}
+.btn-del:hover{background:var(--err-bg);}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important;}
+.pbar{height:7px;background:var(--gray-lt);border-radius:4px;overflow:hidden;margin:7px 0;}
+.pfill{height:100%;background:linear-gradient(90deg,var(--gold),var(--navy));border-radius:4px;transition:width .3s;}
+table{width:100%;border-collapse:collapse;font-size:.86rem;}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;font-weight:700;font-size:.76rem;letter-spacing:.05em;text-transform:uppercase;}
+td{padding:9px 12px;border-bottom:1px solid var(--border);}
+tr:hover td{background:#faf9f5;}
+.adj{color:#b45309;font-weight:700;}
+.sb{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:.76rem;font-weight:700;}
+.sp{background:var(--ok-bg);color:var(--ok);}
+.sf{background:var(--err-bg);color:var(--err);}
+.al{padding:12px 15px;border-radius:8px;font-size:.86rem;margin-bottom:12px;}
+.al-ok{background:var(--ok-bg);color:var(--ok);border:1px solid #86efac;}
+.al-err{background:var(--err-bg);color:var(--err);border:1px solid #fca5a5;}
+.al-warn{background:#fef9c3;color:#854d0e;border:1px solid #fde047;}
+.sc{border:1px solid var(--border);border-radius:10px;padding:15px 18px;margin-bottom:9px;display:flex;align-items:center;gap:13px;background:#fff;transition:box-shadow .18s;}
+.sc:hover{box-shadow:var(--shad);}
+.av{width:44px;height:44px;border-radius:50%;background:var(--navy);color:var(--gold);display:flex;align-items:center;justify-content:center;font-family:"Playfair Display",serif;font-size:1.1rem;font-weight:700;flex-shrink:0;}
+.si{flex:1;}
+.si h3{font-size:.95rem;font-weight:700;}
+.si p{font-size:.78rem;color:var(--gray);margin-top:3px;}
+.sa{display:flex;gap:7px;}
+.sbar{display:flex;gap:10px;margin-bottom:16px;}
+.sbar input{flex:1;padding:9px 13px;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;font-family:"Source Sans 3",sans-serif;}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px;}
+.stc{background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;}
+.stc .n{font-family:"Playfair Display",serif;font-size:1.8rem;color:var(--navy);}
+.stc .l{font-size:.74rem;color:var(--gray);margin-top:3px;text-transform:uppercase;letter-spacing:.04em;}
+.tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:.72rem;font-weight:700;margin-right:4px;}
+.tp{background:#dbeafe;color:#1e40af;}
+.ti{background:#fce7f3;color:#9d174d;}
+.mo{display:none;position:fixed;inset:0;background:rgba(26,39,68,.5);z-index:100;align-items:center;justify-content:center;}
+.mo.open{display:flex;}
+.md{background:#fff;border-radius:14px;padding:28px;max-width:720px;width:92%;max-height:86vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.25);}
+.md h2{font-family:"Playfair Display",serif;margin-bottom:13px;}
+.ma{display:flex;gap:9px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap;}
+.pre-badge{display:flex;align-items:center;gap:9px;background:linear-gradient(135deg,#fdf9f0,#fff);border:1.5px solid var(--gold);border-radius:10px;padding:13px 18px;margin-bottom:14px;}
+.pre-badge .ico{font-size:1.4rem;}
+.pre-badge p{font-size:.86rem;color:var(--navy);}
+.pre-badge strong{display:block;font-size:.92rem;}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.conn-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;margin-right:5px;}
+.conn-dot.err{background:#ef4444;}
+@media(max-width:640px){.row2,.stats{grid-template-columns:1fr 1fr;}main{padding:16px 13px;}nav{padding:0 13px;}header{padding:0 16px;}header h1{font-size:1.05rem;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="hdr-left">
+    <img id="hdr-img" src="" alt="National CDA Training" style="display:none;">
+    <h1>Certificate Generator</h1>
+  </div>
+  <small id="hdr-ct"><span class="conn-dot" id="conn-dot"></span><span id="conn-lbl">Connecting…</span></small>
+</header>
+<nav>
+  <button class="on" onclick="tab('gen')">✦ Generate</button>
+  <button onclick="tab('stu')">👩‍🎓 Students <span class="badge" id="nb">0</span></button>
+  <button onclick="tab('prev')">📋 Preview</button>
+</nav>
+<main>
+
+<!-- GENERATE TAB -->
+<div id="tab-gen">
+  <div class="pre-badge">
+    <div class="ico">✅</div>
+    <p><strong>Logo, Signature &amp; Contributors Page are permanently embedded.</strong>
+    Just upload a CSV, choose a path, and generate.</p>
+  </div>
+
+  <div class="card">
+    <h2>Upload Activity Report CSV</h2>
+    <p class="sub">Upload the learner's CSV from your LMS. The app reads Course, Date, Passed, and Status columns automatically.</p>
+    <div class="dz" id="dz" onclick="document.getElementById('fi').click()">
+      <input type="file" id="fi" accept=".csv" onchange="loadCSV(this.files[0])">
+      <div class="ico">📄</div>
+      <p><strong>Click to upload</strong> or drag &amp; drop a CSV file</p>
+      <p id="fn" class="lbl"></p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Learner &amp; Program</h2>
+    <p class="sub">Auto-filled from CSV. Edit if needed.</p>
+    <div class="row2">
+      <div class="fg"><label>Learner Full Name</label><input type="text" id="lname" placeholder="Auto-filled from CSV"></div>
+      <div class="fg"><label>Center / Program Name (optional)</label><input type="text" id="cname" placeholder="e.g. Sunshine Child Care Center"></div>
+    </div>
+    <div class="row2">
+      <div class="fg"><label>Learner Email (optional)</label><input type="text" id="lemail" placeholder="learner@email.com"></div>
+      <div class="fg"><label>Generated By (your name)</label><input type="text" id="genby" placeholder="Admin name"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>CDA Credential Path</h2>
+    <p class="sub">Choose the credential path. Only the 40 matching courses will receive certificates.</p>
+    <div class="paths">
+      <label class="path sel" id="pp" onclick="pickPath('pre')"><input type="radio" name="path" value="pre" checked><h3>🏫 Preschool</h3><p>40 courses — Preschool CDA</p></label>
+      <label class="path" id="pi" onclick="pickPath('inf')"><input type="radio" name="path" value="inf"><h3>🍼 Infant &amp; Toddler</h3><p>40 courses — Infant &amp; Toddler CDA</p></label>
+    </div>
+  </div>
+
+  <div id="alerts"></div>
+  <div id="ptbl"></div>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:13px;">
+    <button class="btn btn-nv" id="gbtn" onclick="buildPreview()" disabled>⚙️ Parse &amp; Preview</button>
+    <button class="btn btn-go" id="dbtn" onclick="makePDF()" disabled>⬇️ Generate &amp; Download PDF</button>
+  </div>
+  <div id="prog" style="display:none;">
+    <p id="plbl" style="font-size:.84rem;color:var(--gray);margin-bottom:3px;"></p>
+    <div class="pbar"><div class="pfill" id="pfill" style="width:0%"></div></div>
+  </div>
+</div>
+
+<!-- STUDENTS TAB -->
+<div id="tab-stu" style="display:none;">
+  <div class="stats" id="stats">
+    <div class="stc"><div class="n" id="s-total">—</div><div class="l">Students</div></div>
+    <div class="stc"><div class="n" id="s-pre">—</div><div class="l">Preschool</div></div>
+    <div class="stc"><div class="n" id="s-inf">—</div><div class="l">Infant &amp; Toddler</div></div>
+    <div class="stc"><div class="n" id="s-certs">—</div><div class="l">Certificates</div></div>
+    <div class="stc"><div class="n" id="s-pkgs">—</div><div class="l">Packages</div></div>
+  </div>
+  <div class="card">
+    <h2>Student Records</h2>
+    <p class="sub">All records are stored in your shared database — visible to every admin on every device.</p>
+    <div class="sbar">
+      <input type="text" id="srch" placeholder="🔍  Search by name…" oninput="searchStudents()">
+      <select id="fpth" onchange="searchStudents()" style="max-width:175px;">
+        <option value="">All Paths</option>
+        <option value="pre">Preschool</option>
+        <option value="inf">Infant &amp; Toddler</option>
+      </select>
+      <button class="btn btn-ol" onclick="loadStudents()" style="padding:9px 16px;font-size:.84rem;">↻ Refresh</button>
+    </div>
+    <div id="slist"><p style="color:var(--gray);text-align:center;padding:32px 0;">Loading…</p></div>
+  </div>
+</div>
+
+<!-- PREVIEW TAB -->
+<div id="tab-prev" style="display:none;">
+  <div class="card">
+    <h2>Course Preview</h2>
+    <p class="sub" id="psub">No package previewed yet this session.</p>
+    <div id="pcnt"></div>
+  </div>
+</div>
+
+</main>
+
+<!-- Student Detail Modal -->
+<div class="mo" id="smod">
+  <div class="md">
+    <h2 id="mname"></h2>
+    <div id="mcnt"></div>
+    <div class="ma">
+      <button class="btn btn-del" id="mdel">🗑 Delete Record</button>
+      <button class="btn btn-ol" onclick="closeMod()">Close</button>
+      <button class="btn btn-go" id="mredl">⬇️ Re-download PDF</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── ASSETS (loaded from server) ───────────────────────────────
+let SIG = null, LOGO = null;
+
+async function loadAssets() {
+  try {
+    const r = await fetch('/api/assets');
+    const d = await r.json();
+    SIG  = d.signature;
+    LOGO = d.logo;
+    // Show logo in header
+    if (LOGO) {
+      const img = document.getElementById('hdr-img');
+      img.src = LOGO;
+      img.style.display = 'block';
+    }
+    setConn(true);
+  } catch(e) {
+    console.error('Assets load failed', e);
+    setConn(false);
+  }
+}
+
+function setConn(ok) {
+  document.getElementById('conn-dot').className = 'conn-dot' + (ok?'':' err');
+  document.getElementById('conn-lbl').textContent = ok ? 'Connected' : 'Offline — check server';
+}
+
+// ── CONTRIBUTORS (permanent) ──────────────────────────────────
+const CONTRIB = `This 120-hour CDA Training Program was developed by National CDA Training to prepare early childhood professionals for the Child Development Associate (CDA) credential through scenario-based, practice-driven instruction.
+
+Contributors:
+
+Susan Rodenbur — Program Director for a NAEYC Accredited Child Care Program. Susan developed goals for teaching behaviors based on NAEYC materials. These behaviors form the foundation for the scenario-based training. Each class includes 30–60 goals designed to help teachers develop skills and become more effective educators.
+
+Kelly Burlison, BA in Early Childhood Education — Co-Contributor for the scenario-based training.
+
+Dr. Lilla Dale McManis, PhD — Psychologist with expertise in education and learning, child development, parenting, social-emotional wellness, and technology. Editor for the scenario-based training, ensuring each scenario is grounded in early childhood best practices.
+
+Mary Wardlaw, Educational Specialist in Early Childhood — President and Co-Contributor for the scenario-based training.
+
+Celeste Glenn — Developer of the delivery for the content.
+
+National CDA Training | Michigan Child Care Training
+4775 Erie Drive, Buchanan, MI 49107 | Phone: 866-726-3056 | Email: Mary@NationalCDATraining.com`;
+
+// ── COURSE DATA ───────────────────────────────────────────────
+const AREAS = [
+  "Planning a Safe and Healthy Learning Environment",
+  "Advancing Children's Physical and Intellectual Development",
+  "Supporting Children's Social and Emotional Development",
+  "Building Productive Relationships with Families",
+  "Managing an Effective Program Operation",
+  "Maintaining a Commitment to Professionalism",
+  "Observing and Recording Children's Behavior",
+  "Understanding the Principles of Child Development and Learning"
+];
+
+const PRE = [
+  {name:"Early Educator Essentials – foundations in health and safety",area:0,csv:["early education essentials","early educator essentials"]},
+  {name:"Active Supervision",area:0,csv:["active supervision"]},
+  {name:"Space Planning in the Preschool Classroom",area:0,csv:["space planning in the preschool","space planning for preschool"]},
+  {name:"Materials in the Preschool Classroom",area:0,csv:["materials in the preschool"]},
+  {name:"Nutrition",area:0,csv:["nutrition - ","nutrition"]},
+  {name:"Physical Development in Preschool",area:1,csv:["physical development in preschool"]},
+  {name:"Preschool Language and Literacy",area:1,csv:["preschool language and literacy"]},
+  {name:"Preschool and the Arts",area:1,csv:["arts for preschoolers","preschool and the arts","the arts for preschool"]},
+  {name:"Science and Math in Preschool",area:1,csv:["science and math for preschool","science and math in preschool"]},
+  {name:"Preschool Technology and Dual Language",area:1,csv:["preschool dual language","preschool technology and dual"]},
+  {name:"Social Development in Preschool",area:2,csv:["preschool social development","social development in preschool"]},
+  {name:"Supporting Self-Concept in the Preschool Classroom",area:2,csv:["preschool self concept","self-concept in the preschool"]},
+  {name:"Adult Modeling for Preschoolers",area:2,csv:["adult modeling for preschool"]},
+  {name:"Preschool Guidance",area:2,csv:["preschool guidance"]},
+  {name:"Preschool Cultural Identity",area:2,csv:["cultural identity in preschool"]},
+  {name:"Building Productive Relationships with Families - 1",area:3,csv:["building productive relationships part 1","relationships part 1"]},
+  {name:"Building Productive Relationships with Families -2",area:3,csv:["building productive relationships part 2","relationships part 2"]},
+  {name:"Building Productive Relationships with Families – 3",area:3,csv:["building productive relationships part 3","relationships part 3"]},
+  {name:"Building Productive Relationships with Families – 4",area:3,csv:["building productive relationships part 4","relationships part 4"]},
+  {name:"Building Productive Relationships with Families – 5",area:3,csv:["building productive relationships part 5","relationships part 5"]},
+  {name:"Planning for Substitutes",area:4,csv:["preparing for substitutes","planning for substitutes"]},
+  {name:"Community Partnerships",area:4,csv:["community partnerships"]},
+  {name:"Co-Worker Communication",area:4,csv:["effective communication with coworkers","co-worker communication","coworker"]},
+  {name:"Record Keeping",area:4,csv:["record keeping"]},
+  {name:"Reporting",area:4,csv:["reporting - ","reporting"]},
+  {name:"Advocacy in Early Childhood",area:5,csv:["advocacy in early childhood"]},
+  {name:"Ethics in the Early Childhood Profession",area:5,csv:["ethics in early childhood"]},
+  {name:"Professional Development in Early Childhood",area:5,csv:["professional development"]},
+  {name:"Goal Setting in Early Childhood Classrooms",area:5,csv:["goal setting in early childhood"]},
+  {name:"Networking for Early Childhood Teachers",area:5,csv:["networking in the early childhood","networking for early childhood"]},
+  {name:"Objective Observation",area:6,csv:["objective observation"]},
+  {name:"Assessment",area:6,csv:["assessment - ","assessment"]},
+  {name:"Planning from Assessment",area:6,csv:["planning from assessment"]},
+  {name:"Developmental Delays",area:6,csv:["developmental delays"]},
+  {name:"Intervention / IEP / Special Needs",area:6,csv:["intervention-special needs","intervention/iep","intervention special needs"]},
+  {name:"Theory Application – Jean piaget",area:7,csv:["jean piaget","piaget"]},
+  {name:"Theory Application – Lev Vygotsky",area:7,csv:["lev vygotsky","vygotsky"]},
+  {name:"Theory Application – Erik Erikson",area:7,csv:["erik erikson","erikson"]},
+  {name:"Theory Application – Maria Montessori",area:7,csv:["maria montessori","montessori"]},
+  {name:"Theory Application – Urie Bronfenbrenner",area:7,csv:["urie bronfenbrenner","bronfenbrenner"]},
+];
+
+const INF = [
+  {name:"Early Educator Essentials – foundations in health and safety",area:0,csv:["early education essentials","early educator essentials"]},
+  {name:"Active Supervision",area:0,csv:["active supervision"]},
+  {name:"Space Planning in the Infant and Toddler Classroom",area:0,csv:["space planning for infants and toddlers","space planning in the infant"]},
+  {name:"Materials in the Infant and Toddler Classroom",area:0,csv:["materials for infants and toddlers","materials in the infant"]},
+  {name:"Nutrition",area:0,csv:["nutrition - ","nutrition"]},
+  {name:"Physical Development in Infant and Toddler",area:1,csv:["infant and toddler physical development","physical development in infant"]},
+  {name:"Infant and Toddler Language and Literacy",area:1,csv:["language and literacy for infants","infant and toddler language"]},
+  {name:"The Arts for Infants and Toddlers",area:1,csv:["arts for infants and toddlers","the arts for infants"]},
+  {name:"Science and Math for Infants and Toddlers",area:1,csv:["math and science for infants","science and math for infants"]},
+  {name:"Infant and Toddler Dual Language",area:1,csv:["dual langauge for infants","dual language for infants","infant and toddler dual"]},
+  {name:"Social Development in Infants and Toddlers",area:2,csv:["social development for infants and toddlers","social development in infants"]},
+  {name:"Supporting Self-Concept in the Infant and Toddler Classroom",area:2,csv:["self-concept in infants and toddlers","supporting self-concept in infants"]},
+  {name:"Adult Modeling for Infants and Toddlers",area:2,csv:["adult modeling for infants"]},
+  {name:"Infant and Toddler Guidance",area:2,csv:["infant and toddler guidance"]},
+  {name:"Infant and Toddler Cultural Identity",area:2,csv:["cultural identity infants and toddlers","cultural identity infant"]},
+  {name:"Building Productive Relationships with Families - 1",area:3,csv:["building productive relationships part 1","relationships part 1"]},
+  {name:"Building Productive Relationships with Families -2",area:3,csv:["building productive relationships part 2","relationships part 2"]},
+  {name:"Building Productive Relationships with Families – 3",area:3,csv:["building productive relationships part 3","relationships part 3"]},
+  {name:"Building Productive Relationships with Families – 4",area:3,csv:["building productive relationships part 4","relationships part 4"]},
+  {name:"Building Productive Relationships with Families – 5",area:3,csv:["building productive relationships part 5","relationships part 5"]},
+  {name:"Planning for Substitutes",area:4,csv:["preparing for substitutes","planning for substitutes"]},
+  {name:"Community Partnerships",area:4,csv:["community partnerships"]},
+  {name:"Co-Worker Communication",area:4,csv:["effective communication with coworkers","co-worker communication","coworker"]},
+  {name:"Record Keeping",area:4,csv:["record keeping"]},
+  {name:"Reporting",area:4,csv:["reporting - ","reporting"]},
+  {name:"Advocacy in Early Childhood",area:5,csv:["advocacy in early childhood"]},
+  {name:"Ethics in the Early Childhood Profession",area:5,csv:["ethics in early childhood"]},
+  {name:"Professional Development in Early Childhood",area:5,csv:["professional development"]},
+  {name:"Goal Setting in Early Childhood Classrooms",area:5,csv:["goal setting in early childhood"]},
+  {name:"Networking for Early Childhood Teachers",area:5,csv:["networking in the early childhood","networking for early childhood"]},
+  {name:"Objective Observation",area:6,csv:["objective observation"]},
+  {name:"Assessment",area:6,csv:["assessment - ","assessment"]},
+  {name:"Planning from Assessment",area:6,csv:["planning from assessment"]},
+  {name:"Developmental Delays",area:6,csv:["developmental delays"]},
+  {name:"Intervention / IEP / Special Needs",area:6,csv:["intervention-special needs","intervention/iep","intervention special needs"]},
+  {name:"Theory Application – Jean piaget",area:7,csv:["jean piaget","piaget"]},
+  {name:"Theory Application – Lev Vygotsky",area:7,csv:["lev vygotsky","vygotsky"]},
+  {name:"Theory Application – Erik Erikson",area:7,csv:["erik erikson","erikson"]},
+  {name:"Theory Application – Maria Montessori",area:7,csv:["maria montessori","montessori"]},
+  {name:"Theory Application – Urie Bronfenbrenner",area:7,csv:["urie bronfenbrenner","bronfenbrenner"]},
+];
+
+// ── STATE ─────────────────────────────────────────────────────
+let csvRows = [], dates = [], allStudents = [];
+
+// ── TABS ──────────────────────────────────────────────────────
+function tab(n) {
+  ["gen","stu","prev"].forEach(t => document.getElementById("tab-"+t).style.display = t===n ? "block" : "none");
+  document.querySelectorAll("nav button").forEach((b,i) => b.classList.toggle("on", ["gen","stu","prev"][i]===n));
+  if (n==="stu") { loadStudents(); loadStats(); }
+}
+
+function pickPath(p) {
+  document.getElementById("pp").classList.toggle("sel", p==="pre");
+  document.getElementById("pi").classList.toggle("sel", p==="inf");
+  document.querySelector(`input[value="${p}"]`).checked = true;
+}
+
+// ── CSV ───────────────────────────────────────────────────────
+function loadCSV(file) {
+  if (!file) return;
+  document.getElementById("fn").textContent = "✓ " + file.name;
+  document.getElementById("dz").classList.add("ok");
+  Papa.parse(file, { header:true, skipEmptyLines:true, complete(r) {
+    csvRows = r.data;
+    if (csvRows.length) {
+      const row = csvRows[0];
+      const fn = row["First Name"]||"", ln = row["Last Name"]||"";
+      if (fn||ln) document.getElementById("lname").value = (fn+" "+ln).trim();
+    }
+    alert2("ok", `✓ CSV loaded — ${csvRows.length} rows. Click Parse & Preview.`);
+    document.getElementById("gbtn").disabled = false;
+  }, error: () => alert2("err","✗ Could not read CSV.") });
+}
+
+const dzel = document.getElementById("dz");
+dzel.addEventListener("dragover", e => { e.preventDefault(); dzel.classList.add("over"); });
+dzel.addEventListener("dragleave", () => dzel.classList.remove("over"));
+dzel.addEventListener("drop", e => { e.preventDefault(); dzel.classList.remove("over"); if(e.dataTransfer.files[0]) loadCSV(e.dataTransfer.files[0]); });
+
+// ── MATCHING & DATES ──────────────────────────────────────────
+function buildCSVMap() {
+  const map = {};
+  for (const row of csvRows) {
+    const cn = (row["Course"]||"").toLowerCase();
+    const status = (row["Status"]||"").toLowerCase();
+    const date = row["Date"]||"";
+    if (!cn||!date||status!=="completed") continue;
+    if (!map[cn] || date > map[cn].date) map[cn] = { date, passed: row["Passed"]||"" };
+  }
+  return map;
+}
+
+function matchCourse(course, csvMap) {
+  const keys = Object.keys(csvMap);
+  for (const kw of course.csv) {
+    const found = keys.find(k => k.includes(kw));
+    if (found) return csvMap[found];
+  }
+  return null;
+}
+
+function dedup(items) {
+  const used = new Set();
+  return [...items].sort((a,b)=>new Date(a.rawDate)-new Date(b.rawDate)).map(item=>{
+    let d = new Date(item.rawDate+"T12:00:00"), adj=false, n=0;
+    while (used.has(d.toISOString().slice(0,10))&&n<600) { d.setDate(d.getDate()-1); adj=true; n++; }
+    const ds = d.toISOString().slice(0,10);
+    used.add(ds);
+    return {...item, assignedDate:ds, adjusted:adj};
+  });
+}
+
+function fmtDate(s) {
+  return new Date(s+"T12:00:00").toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"});
+}
+
+function fallback(i) {
+  const d = new Date(); d.setDate(d.getDate()-(40-i)*9); return d.toISOString().slice(0,10);
+}
+
+// ── PREVIEW ───────────────────────────────────────────────────
+function buildPreview() {
+  const name = document.getElementById("lname").value.trim();
+  if (!name) return alert2("err","Please enter the learner name.");
+  const path = document.querySelector("input[name=path]:checked").value;
+  const courses = path==="pre" ? PRE : INF;
+  const csvMap = buildCSVMap();
+
+  const raw = courses.map((c,i) => {
+    const m = matchCourse(c, csvMap);
+    return { course:c.name, area:c.area,
+      rawDate: m?.date || fallback(i),
+      status: m ? (m.passed&&m.passed!="false"?"Pass":"Incomplete") : "Incomplete",
+      fromCSV: !!m };
+  });
+
+  dates = dedup(raw);
+  document.getElementById("dbtn").disabled = false;
+
+  const adjN = dates.filter(r=>r.adjusted).length;
+  const noM  = dates.filter(r=>!r.fromCSV).length;
+  let ah = "";
+  if (noM)  ah += `<div class="al al-warn">⚠️ ${noM} course(s) not found in CSV — estimated dates used.</div>`;
+  if (adjN) ah += `<div class="al al-warn">⚠️ ${adjN} date(s) shifted back to avoid duplicates (↩).</div>`;
+  ah += `<div class="al al-ok">✓ ${dates.length} certificates ready for <strong>${name}</strong> — ${path==="pre"?"Preschool":"Infant & Toddler"} CDA</div>`;
+
+  let th = `<div style="overflow-x:auto;margin-top:6px;"><table><thead><tr><th>#</th><th>Official Course Name</th><th>CDA Subject Area</th><th>Status</th><th>Certificate Date</th></tr></thead><tbody>`;
+  dates.forEach((r,i) => {
+    th += `<tr><td style="color:var(--gray);font-weight:700;">${i+1}</td><td>${r.course}</td><td style="font-size:.76rem;color:var(--gray);">${AREAS[r.area]}</td><td><span class="sb ${r.status==="Pass"?"sp":"sf"}">${r.status}</span></td><td class="${r.adjusted?"adj":""}">${fmtDate(r.assignedDate)}${r.adjusted?" ↩":""}</td></tr>`;
+  });
+  th += "</tbody></table></div>";
+
+  document.getElementById("alerts").innerHTML = ah;
+  document.getElementById("ptbl").innerHTML = th;
+  document.getElementById("pcnt").innerHTML = ah + th;
+  document.getElementById("psub").textContent = `${name} — ${path==="pre"?"Preschool":"Infant & Toddler"} CDA — ${dates.length} certificates`;
+}
+
+// ── PDF ───────────────────────────────────────────────────────
+async function makePDF() {
+  if (!dates.length) return alert2("err","Please click Parse & Preview first.");
+  if (!SIG || !LOGO) return alert2("err","Assets still loading — please wait a moment and try again.");
+
+  const name   = document.getElementById("lname").value.trim();
+  const center = document.getElementById("cname").value.trim();
+  const email  = document.getElementById("lemail").value.trim();
+  const genby  = document.getElementById("genby").value.trim() || "Admin";
+  const path   = document.querySelector("input[name=path]:checked").value;
+  const pLabel = path==="pre" ? "Preschool CDA Training" : "Infant and Toddler CDA Training";
+
+  document.getElementById("dbtn").disabled = true;
+  prog("Initializing PDF…", 2);
+
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({orientation:"landscape",unit:"pt",format:"letter"});
+  const W=792, H=612;
+
+  const sigImg  = await loadImg(SIG);
+  const logoImg = await loadImg(LOGO);
+
+  prog("Cover page…", 5);
+  drawCover(doc, W, H, name, pLabel, center, logoImg);
+
+  prog("Transcript…", 12);
+  doc.addPage();
+  drawTranscript(doc, W, H, name, pLabel, center);
+
+  for (let i=0; i<dates.length; i++) {
+    prog(`Certificate ${i+1}/${dates.length}: ${dates[i].course.substring(0,45)}…`, Math.round(15+i/dates.length*82));
+    await sleep(0);
+    doc.addPage();
+    drawCert(doc, W, H, name, dates[i], pLabel, sigImg, logoImg);
+  }
+
+  prog("Saving…", 98); await sleep(60);
+  const safeN = name.replace(/[^a-zA-Z0-9 ]/g,"").replace(/\s+/g,"_");
+  const fn = `${safeN}_${path==="pre"?"Preschool":"Infant_Toddler"}_CDA.pdf`;
+  doc.save(fn);
+
+  // Save to shared database
+  prog("Saving to database…", 99);
+  try {
+    await fetch("/api/packages", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        name, center, email, path, pathLabel:pLabel,
+        filename:fn, generatedBy:genby,
+        courses: dates.map(r=>({ course:r.course, area:AREAS[r.area], areaIndex:r.area, date:r.assignedDate, status:r.status }))
+      })
+    });
+    alert2("ok", `✓ Downloaded: ${fn}  |  Record saved to shared database.`);
+    updateBadge();
+  } catch(e) {
+    alert2("warn","✓ PDF downloaded. Note: could not save to database — check server connection.");
+  }
+
+  prog("Done!", 100);
+  setTimeout(()=>{ document.getElementById("prog").style.display="none"; document.getElementById("dbtn").disabled=false; }, 900);
+}
+
+function loadImg(src) { return new Promise(r=>{ const i=new Image(); i.onload=()=>r(i); i.onerror=()=>r(null); i.src=src; }); }
+function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
+
+// ── PDF DRAWING ───────────────────────────────────────────────
+function drawCover(doc,W,H,name,pLabel,center,logo){
+  doc.setFillColor(255,255,255); doc.rect(0,0,W,H,"F");
+  doc.setDrawColor(41,98,163); doc.setLineWidth(7); doc.rect(11,11,W-22,H-22);
+  doc.setDrawColor(201,168,76); doc.setLineWidth(2); doc.rect(18,18,W-36,H-36);
+  if(logo){ doc.addImage(logo,W/2-110,22,220,62); }
+  doc.setFillColor(26,39,68); doc.rect(18,90,W-36,68,"F");
+  doc.setFontSize(22); doc.setFont("helvetica","bold"); doc.setTextColor(201,168,76);
+  doc.text("120-HOUR CDA TRAINING PROGRAM",W/2,122,{align:"center"});
+  doc.setFontSize(13); doc.setTextColor(232,213,163);
+  doc.text(pLabel,W/2,150,{align:"center"});
+  doc.setDrawColor(201,168,76); doc.setLineWidth(1.5); doc.line(50,168,W-50,168);
+  doc.setFontSize(10); doc.setFont("helvetica","bold"); doc.setTextColor(100,100,100);
+  doc.text("Prepared for:",W/2,188,{align:"center"});
+  doc.setFontSize(22); doc.setTextColor(26,39,68);
+  doc.text(name,W/2,215,{align:"center"});
+  if(center){ doc.setFontSize(10);doc.setFont("helvetica","normal");doc.setTextColor(120,120,120);doc.text(center,W/2,231,{align:"center"}); }
+  doc.setFontSize(9); doc.setFont("helvetica","normal"); doc.setTextColor(60,60,60);
+  const cl=doc.splitTextToSize(CONTRIB,W-120);
+  doc.text(cl.slice(0,22),60,250);
+  doc.setFillColor(26,39,68); doc.rect(18,H-36,W-36,18,"F");
+  doc.setFontSize(8); doc.setTextColor(201,168,76);
+  doc.text("National CDA Training  |  866-726-3056  |  Mary@NationalCDATraining.com  |  4775 Erie Drive, Buchanan, MI 49107",W/2,H-24,{align:"center"});
+}
+
+function drawTranscript(doc,W,H,name,pLabel,center){
+  doc.setFillColor(255,255,255); doc.rect(0,0,W,H,"F");
+  doc.setDrawColor(41,98,163); doc.setLineWidth(7); doc.rect(11,11,W-22,H-22);
+  doc.setDrawColor(201,168,76); doc.setLineWidth(2); doc.rect(18,18,W-36,H-36);
+  doc.setFillColor(26,39,68); doc.rect(18,18,W-36,62,"F");
+  doc.setFontSize(18); doc.setFont("helvetica","bold"); doc.setTextColor(201,168,76);
+  doc.text("OFFICIAL TRAINING TRANSCRIPT",W/2,46,{align:"center"});
+  doc.setFontSize(9); doc.setTextColor(232,213,163);
+  doc.text("National CDA Training  |  Michigan Child Care Training  |  4775 Erie Drive, Buchanan, MI 49107  |  866-726-3056",W/2,66,{align:"center"});
+  doc.setFillColor(245,242,235); doc.roundedRect(26,90,W-52,34,4,4,"F");
+  doc.setDrawColor(201,168,76); doc.setLineWidth(1); doc.roundedRect(26,90,W-52,34,4,4,"S");
+  doc.setFontSize(10); doc.setFont("helvetica","bold"); doc.setTextColor(26,39,68);
+  doc.text("Learner: "+name,40,106);
+  doc.text("Program: "+pLabel,40,120);
+  doc.setFont("helvetica","normal");
+  doc.text("Total Hours: 120  |  Courses: "+dates.length+"  |  Generated: "+new Date().toLocaleDateString(),W-40,106,{align:"right"});
+  if(center) doc.text("Center: "+center,W-40,120,{align:"right"});
+  const cw=[26,248,200,44,66,94];
+  const hds=["#","Course Title","CDA Subject Area","Hrs","Status","Date"];
+  let ty=134;
+  doc.setFillColor(26,39,68); doc.rect(26,ty,W-52,16,"F");
+  doc.setFontSize(7.5); doc.setFont("helvetica","bold"); doc.setTextColor(255,255,255);
+  let tx=26; hds.forEach((h,i)=>{doc.text(h,tx+3,ty+11);tx+=cw[i];});
+  ty+=16;
+  doc.setFont("helvetica","normal");
+  dates.forEach((r,i)=>{
+    if(ty>H-50){
+      doc.addPage();
+      doc.setFillColor(255,255,255);doc.rect(0,0,W,H,"F");
+      doc.setFillColor(26,39,68);doc.rect(26,28,W-52,16,"F");
+      doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);doc.setFontSize(7.5);
+      tx=26;hds.forEach((h,j)=>{doc.text(h,tx+3,39);tx+=cw[j];}); ty=44;
+      doc.setFont("helvetica","normal");
+    }
+    doc.setFillColor(i%2===0?248:255,i%2===0?246:255,i%2===0?240:255);
+    doc.rect(26,ty,W-52,14,"F");
+    doc.setTextColor(50,50,50);
+    tx=26;
+    [String(i+1),r.course,AREAS[r.area],"3",r.status,fmtDate(r.assignedDate)].forEach((c,ci)=>{
+      doc.text(doc.splitTextToSize(c,cw[ci]-5)[0],tx+3,ty+10); tx+=cw[ci];
+    });
+    doc.setDrawColor(215,210,200);doc.setLineWidth(.4);doc.line(26,ty+14,W-26,ty+14);
+    ty+=14;
+  });
+  doc.setFillColor(26,39,68); doc.rect(26,ty,W-52,18,"F");
+  doc.setFontSize(10); doc.setFont("helvetica","bold"); doc.setTextColor(201,168,76);
+  doc.text("TOTAL: 120 CONTACT HOURS  —  40 COURSES COMPLETED",W/2,ty+13,{align:"center"});
+}
+
+function drawCert(doc,W,H,name,row,pLabel,sigImg,logoImg){
+  doc.setFillColor(255,255,255); doc.rect(0,0,W,H,"F");
+  doc.setDrawColor(41,98,163); doc.setLineWidth(6); doc.rect(10,10,W-20,H-20);
+  doc.setDrawColor(41,98,163); doc.setLineWidth(1.5); doc.rect(15,15,W-30,H-30);
+  if(logoImg){ doc.addImage(logoImg,W/2-110,18,220,58); }
+  else{ doc.setFontSize(10);doc.setFont("helvetica","bold");doc.setTextColor(41,98,163);doc.text("NATIONAL CDA TRAINING",W/2,34,{align:"center"}); }
+  doc.setFontSize(34); doc.setFont("helvetica","bold"); doc.setTextColor(20,20,20);
+  doc.text("CERTIFICATE OF COMPLETION",W/2,100,{align:"center"});
+  doc.setFontSize(9.5); doc.setFont("helvetica","bold"); doc.setTextColor(26,39,68);
+  doc.text("NATIONAL CDA TRAINING: 120 HOUR CDA TRAINING PROGRAM",W/2,118,{align:"center"});
+  const left=["Planning a safe and healthy learning environment  15 hours","Advancing children’s physical and intellectual development  15 hours","Supporting children’s social and emotional development  15 hours","Building productive relationships with families  15 hours"];
+  const right=["Managing and effective programs  15 hours","Maintaining a commitment to professionalism  15 hours","Observing and recording children’s behavior  15 hours","Understanding principles of child development and learning  15 hours"];
+  doc.setFontSize(8.5); doc.setFont("helvetica","normal"); doc.setTextColor(60,60,60);
+  let ay=136; for(let i=0;i<4;i++){ doc.text(left[i],W/2-18,ay,{align:"right"}); doc.text(right[i],W/2+18,ay,{align:"left"}); ay+=13; }
+  doc.setDrawColor(130,130,130); doc.setLineWidth(1.5); doc.line(38,ay+3,W-38,ay+3); doc.line(38,ay+7,W-38,ay+7);
+  doc.setFontSize(40); doc.setFont("helvetica","normal"); doc.setTextColor(20,20,20);
+  doc.text(name,W/2,ay+50,{align:"center"});
+  doc.setDrawColor(130,130,130); doc.setLineWidth(1.5); doc.line(38,ay+58,W-38,ay+58); doc.line(38,ay+62,W-38,ay+62);
+  doc.setFontSize(9.5); doc.setFont("helvetica","bold"); doc.setTextColor(26,39,68);
+  doc.text("HAS SUCCESSFULLY COMPLETED THE",W/2,ay+80,{align:"center"});
+  doc.setDrawColor(201,168,76); doc.setLineWidth(1); doc.line(W/2-160,ay+92,W/2-22,ay+92); doc.line(W/2+22,ay+92,W/2+160,ay+92);
+  const cLines=doc.splitTextToSize(row.course,W-130);
+  const boxH=cLines.length>1?42:32;
+  doc.setFillColor(26,39,68); doc.roundedRect(46,ay+96,W-92,boxH,4,4,"F");
+  doc.setFontSize(cLines.length>1?10.5:12); doc.setFont("helvetica","bold"); doc.setTextColor(255,255,255);
+  doc.text(cLines,W/2,cLines.length>1?ay+112:ay+117,{align:"center",lineHeightFactor:1.4});
+  const boxBot=ay+96+boxH+4;
+  doc.setFontSize(8.5); doc.setFont("helvetica","italic"); doc.setTextColor(80,80,80);
+  doc.text("CDA Subject Area: "+AREAS[row.area],W/2,boxBot+12,{align:"center"});
+  doc.setFontSize(8.5); doc.setFont("helvetica","normal"); doc.setTextColor(100,100,100);
+  doc.text(pLabel+"  |  3 Contact Hours",W/2,boxBot+26,{align:"center"});
+  const sigY=boxBot+38;
+  if(sigImg){ doc.addImage(SIG,"JPEG",W/2-262,sigY,148,46); }
+  doc.setFontSize(11); doc.setFont("helvetica","normal"); doc.setTextColor(20,20,20);
+  doc.text(fmtDate(row.assignedDate),W/2+52,sigY+32,{align:"left"});
+  doc.setDrawColor(26,39,68); doc.setLineWidth(1);
+  doc.line(W/2-268,sigY+48,W/2-118,sigY+48); doc.line(W/2+42,sigY+48,W/2+235,sigY+48);
+  doc.setFontSize(8.5); doc.setFont("helvetica","bold"); doc.setTextColor(26,39,68);
+  doc.text("MARY WARDLAW, President",W/2-268,sigY+58); doc.text("Date",W/2+42,sigY+58);
+  doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(80,80,80);
+  doc.text("National CDA Training|Michigan Child Care Training",W/2-268,sigY+69);
+  doc.text("4775 Erie Drive, Buchanan, MI 49107",W/2-268,sigY+79);
+}
+
+// ── PROGRESS & ALERTS ─────────────────────────────────────────
+function prog(lbl,pct){ document.getElementById("prog").style.display="block"; document.getElementById("plbl").textContent=lbl; document.getElementById("pfill").style.width=pct+"%"; }
+function alert2(t,msg){ const m={ok:"al-ok",err:"al-err",warn:"al-warn"}; document.getElementById("alerts").innerHTML=`<div class="al ${m[t]||"al-warn"}">${msg}</div>`; }
+
+// ── STUDENT DATABASE ──────────────────────────────────────────
+async function loadStats() {
+  try {
+    const r = await fetch("/api/stats");
+    const d = await r.json();
+    document.getElementById("s-total").textContent = d.total_students || 0;
+    document.getElementById("s-pre").textContent   = d.preschool || 0;
+    document.getElementById("s-inf").textContent   = d.infant || 0;
+    document.getElementById("s-certs").textContent = d.total_certs || 0;
+    document.getElementById("s-pkgs").textContent  = d.total_packages || 0;
+  } catch(e) {}
+}
+
+async function updateBadge() {
+  try {
+    const r = await fetch("/api/stats");
+    const d = await r.json();
+    document.getElementById("nb").textContent = d.total_students || 0;
+  } catch(e) {}
+}
+
+async function loadStudents() {
+  const q   = document.getElementById("srch")?.value || "";
+  const fp  = document.getElementById("fpth")?.value || "";
+  const url = `/api/students?q=${encodeURIComponent(q)}`;
+  try {
+    const r = await fetch(url);
+    allStudents = await r.json();
+    drawStudents(fp);
+  } catch(e) {
+    document.getElementById("slist").innerHTML = `<div class="al al-err">Could not load student records. Check server connection.</div>`;
+  }
+}
+
+function searchStudents() { loadStudents(); }
+
+function drawStudents(fpFilter) {
+  const fp = fpFilter || document.getElementById("fpth")?.value || "";
+  const list = fp ? allStudents.filter(s=>s.path===fp) : allStudents;
+  const el = document.getElementById("slist");
+  if (!list.length) { el.innerHTML=`<p style="color:var(--gray);text-align:center;padding:32px 0;">No students found.</p>`; return; }
+  el.innerHTML = list.map(s=>`
+    <div class="sc">
+      <div class="av">${s.name.charAt(0).toUpperCase()}</div>
+      <div class="si">
+        <h3>${s.name}</h3>
+        <p><span class="tag ${s.path==="pre"?"tp":"ti"}">${s.path_label}</span>
+        ${s.cert_count||0} certs &nbsp;·&nbsp; ${new Date(s.updated_at).toLocaleDateString()}${s.center?" &nbsp;·&nbsp; "+s.center:""}</p>
+      </div>
+      <div class="sa">
+        <button class="btn btn-ol" style="font-size:.8rem;padding:7px 12px;" onclick="viewStu(${s.id})">View</button>
+      </div>
+    </div>`).join("");
+}
+
+async function viewStu(id) {
+  try {
+    const r = await fetch(`/api/students/${id}`);
+    const s = await r.json();
+    document.getElementById("mname").textContent = s.name;
+    const rows = (s.certificates||[]).map((c,i)=>`<tr>
+      <td style="color:var(--gray);font-weight:700;">${i+1}</td>
+      <td>${c.course_name}</td>
+      <td style="font-size:.76rem;color:var(--gray);">${c.subject_area}</td>
+      <td><span class="sb ${c.status==="Pass"?"sp":"sf"}">${c.status}</span></td>
+      <td>${fmtDate(c.cert_date.slice?c.cert_date.slice(0,10):c.cert_date)}</td>
+    </tr>`).join("");
+    const histRows = (s.history||[]).map(h=>`<tr><td>${new Date(h.generated_at).toLocaleDateString()}</td><td>${h.filename}</td><td>${h.generated_by||"Admin"}</td></tr>`).join("");
+    document.getElementById("mcnt").innerHTML = `
+      <p style="margin-bottom:12px;font-size:.84rem;color:var(--gray);">
+        <span class="tag ${s.path==="pre"?"tp":"ti"}">${s.path_label}</span>
+        ${s.cert_count||0} certificates${s.center?" &nbsp;·&nbsp; "+s.center:""}
+      </p>
+      <div style="overflow-x:auto;max-height:320px;">
+      <table><thead><tr><th>#</th><th>Course</th><th>CDA Subject Area</th><th>Status</th><th>Date</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+      ${histRows ? `<h3 style="font-family:'Playfair Display',serif;margin:16px 0 8px;">Generation History</h3>
+      <table><thead><tr><th>Date</th><th>Filename</th><th>Generated By</th></tr></thead><tbody>${histRows}</tbody></table>` : ""}`;
+    document.getElementById("mdel").onclick = () => { if(confirm("Delete all records for "+s.name+"?")) delStu(s.id); };
+    document.getElementById("mredl").onclick = () => redownload(s);
+    document.getElementById("smod").classList.add("open");
+  } catch(e) {
+    alert2("err","Could not load student details.");
+  }
+}
+
+function closeMod() { document.getElementById("smod").classList.remove("open"); }
+document.getElementById("smod").addEventListener("click",function(e){if(e.target===this)closeMod();});
+
+async function delStu(id) {
+  try {
+    await fetch(`/api/students/${id}`,{method:"DELETE"});
+  } catch(e) {}
+  closeMod(); loadStudents(); loadStats();
+}
+
+async function redownload(s) {
+  dates = (s.certificates||[]).map(c=>({
+    course: c.course_name, area: AREAS.indexOf(c.subject_area),
+    assignedDate: c.cert_date.slice?c.cert_date.slice(0,10):c.cert_date,
+    status: c.status, adjusted:false, fromCSV:true
+  }));
+  document.getElementById("lname").value = s.name;
+  document.getElementById("cname").value = s.center||"";
+  pickPath(s.path);
+  closeMod(); tab("gen"); await sleep(80); await makePDF();
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+loadAssets();
+updateBadge();
+</script>
+</body>
+</html>
