@@ -725,7 +725,7 @@ function drawTranscript(doc,W,H,name,pLabel){
   doc.text("Learner: "+name,40,106);
   doc.text("Program: "+pLabel,40,120);
   doc.setFont("helvetica","normal");
-  doc.text("Total Hours: 120  |  Courses: "+dates.length+"  |  Generated: "+new Date().toLocaleDateString(),W-40,106,{align:"right"});
+  doc.text("Total Hours: "+(dates.length*3)+"  |  Courses: "+dates.length+"  |  Generated: "+new Date().toLocaleDateString(),W-40,106,{align:"right"});
   const cw=[26,280,220,44,118];
   const hds=["#","Course Title","CDA Subject Area","Hrs","Date"];
   let ty=134;
@@ -750,7 +750,7 @@ function drawTranscript(doc,W,H,name,pLabel){
   });
   doc.setFillColor(26,39,68);doc.rect(26,ty,W-52,18,"F");
   doc.setFontSize(10);doc.setFont("helvetica","bold");doc.setTextColor(201,168,76);
-  doc.text("TOTAL: 120 CONTACT HOURS  —  40 COURSES COMPLETED",W/2,ty+13,{align:"center"});
+  doc.text("TOTAL: "+(dates.length*3)+" CONTACT HOURS  —  "+dates.length+" COURSES COMPLETED",W/2,ty+13,{align:"center"});
 }
 
 // ── PDF: CERTIFICATE ──────────────────────────────────────────
