@@ -419,7 +419,9 @@ function buildPDF(learner, pathKey, matched) {
   doc.setFont('times','bold'); doc.setFontSize(25); doc.setTextColor(255,255,255);
   doc.text(nm, W/2, cy+2.2, {align:'center'});
   doc.setFont('times','normal'); doc.setFontSize(8.5); doc.setTextColor(170,188,218);
-  doc.text('has successfully completed 120 clock hours of', W/2, cy+2.65, {align:'center'});
+  const completedCourses = matched.filter(c => c.hit);
+  const totalHours = completedCourses.length * 3;
+  doc.text(`has successfully completed ${totalHours} clock hours of`, W/2, cy+2.65, {align:'center'});
   doc.setFontSize(11); doc.setTextColor(196,154,42);
   doc.text(pathLabel+' Training', W/2, cy+3.0, {align:'center'});
   doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(255,255,255);
@@ -432,7 +434,7 @@ function buildPDF(learner, pathKey, matched) {
   doc.setFont('times','bold'); doc.setFontSize(13); doc.setTextColor(255,255,255);
   doc.text('Official Training Transcript', W/2, 0.46, {align:'center'});
   doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(196,154,42);
-  doc.text(pathLabel+' — 120 Clock Hours', W/2, 0.7, {align:'center'});
+  doc.text(`${pathLabel} — ${totalHours} Clock Hours`, W/2, 0.7, {align:'center'});
   doc.setFontSize(7); doc.setTextColor(175,195,225);
   doc.text(nm, W/2, 0.94, {align:'center'});
 
@@ -446,7 +448,7 @@ function buildPDF(learner, pathKey, matched) {
   doc.text('Hrs',          mg+9.35, TY+0.18);
 
   const rH=0.162, rY=TY+0.26;
-  matched.forEach((c,i) => {
+  completedCourses.forEach((c,i) => {
     const y=rY+i*rH;
     doc.setFillColor(...(i%2===0?[255,255,255]:[248,246,240]));
     doc.rect(mg,y,W-mg*2,rH,'F');
@@ -459,13 +461,13 @@ function buildPDF(learner, pathKey, matched) {
     doc.text(fmtDate(c.date),             mg+8.0,  y+rH-0.04);
     doc.text('3',                         mg+9.5,  y+rH-0.04);
   });
-  const fY=rY+matched.length*rH+0.1;
+  const fY=rY+completedCourses.length*rH+0.1;
   doc.setFillColor(26,39,68); doc.rect(mg,fY,W-mg*2,0.28,'F');
   doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(196,154,42);
-  doc.text('TOTAL: 120 CLOCK HOURS', W-mg-0.12, fY+0.19, {align:'right'});
+  doc.text(`TOTAL: ${completedCourses.length} COURSES — ${totalHours} CLOCK HOURS`, W-mg-0.12, fY+0.19, {align:'right'});
 
-  // ── 40 Certificate Pages ──────────────────────────────────────
-  matched.forEach((c) => {
+  // ── Certificate Pages (completed courses only) ────────────────
+  completedCourses.forEach((c) => {
     doc.addPage();
     const sa=SA[c.area]; const [r,g,b]=hex2rgb(sa.col);
     doc.setFillColor(255,255,255); doc.rect(0,0,W,H,'F');
