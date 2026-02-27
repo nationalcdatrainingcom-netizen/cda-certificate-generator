@@ -6,7 +6,6 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-// Create tables if they don't exist
 async function initDB() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS students (
@@ -33,67 +32,62 @@ async function initDB() {
     );
 
     CREATE TABLE IF NOT EXISTS generated_packages (
-      id          SERIAL PRIMARY KEY,
-      student_id  INT REFERENCES students(id) ON DELETE CASCADE,
-      filename    VARCHAR(500),
-      path        VARCHAR(10),
+      id           SERIAL PRIMARY KEY,
+      student_id   INT REFERENCES students(id) ON DELETE CASCADE,
+      filename     VARCHAR(500),
+      path         VARCHAR(10),
       generated_at TIMESTAMPTZ DEFAULT NOW(),
-      generated_by VARCHAR(255)
+      generated_by VARCHAR(255),
+      pdf_data     BYTEA
     );
 
-    -- Add unique constraint so upserts work correctly
-    -- (safe to run repeatedly — IF NOT EXISTS equivalent via DO block)
+    CREATE TABLE IF NOT EXISTS magic_tokens (
+      id         SERIAL PRIMARY KEY,
+      email      VARCHAR(255) NOT NULL,
+      token      VARCHAR(128) NOT NULL UNIQUE,
+      expires_at TIMESTAMPTZ NOT NULL,
+      used       BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
   `);
 
-  // Deduplicate students before adding unique constraint.
-  // Keep the most recently updated row for each (name, path) pair,
-  // re-parent its certificates and packages, then delete the extras.
+  // Add pdf_data column to existing generated_packages if missing
+  await pool.query(`
+    ALTER TABLE generated_packages ADD COLUMN IF NOT EXISTS pdf_data BYTEA;
+  `);
+
+  // Add email column to students if missing
+  await pool.query(`
+    ALTER TABLE students ADD COLUMN IF NOT EXISTS email VARCHAR(255);
+  `);
+
+  // Deduplicate and add unique constraint on (name, path)
   await pool.query(`
     DO $$
     DECLARE
       dup RECORD;
       keep_id INT;
     BEGIN
-      -- Only run if constraint doesn't exist yet
       IF NOT EXISTS (
         SELECT 1 FROM pg_constraint WHERE conname = 'students_name_path_unique'
       ) THEN
-
-        -- For every duplicate (name, path) group...
         FOR dup IN
-          SELECT name, path
-          FROM students
-          GROUP BY name, path
-          HAVING COUNT(*) > 1
+          SELECT name, path FROM students GROUP BY name, path HAVING COUNT(*) > 1
         LOOP
-          -- Pick the most-recently-updated row to keep
-          SELECT id INTO keep_id
-          FROM students
+          SELECT id INTO keep_id FROM students
           WHERE name = dup.name AND path = dup.path
-          ORDER BY updated_at DESC, id DESC
-          LIMIT 1;
+          ORDER BY updated_at DESC, id DESC LIMIT 1;
 
-          -- Re-parent certificates and packages to the keeper
-          UPDATE certificates
-            SET student_id = keep_id
+          UPDATE certificates SET student_id = keep_id
           WHERE student_id IN (
-            SELECT id FROM students
-            WHERE name = dup.name AND path = dup.path AND id <> keep_id
+            SELECT id FROM students WHERE name = dup.name AND path = dup.path AND id <> keep_id
           );
-
-          UPDATE generated_packages
-            SET student_id = keep_id
+          UPDATE generated_packages SET student_id = keep_id
           WHERE student_id IN (
-            SELECT id FROM students
-            WHERE name = dup.name AND path = dup.path AND id <> keep_id
+            SELECT id FROM students WHERE name = dup.name AND path = dup.path AND id <> keep_id
           );
-
-          -- Delete the duplicate rows
-          DELETE FROM students
-          WHERE name = dup.name AND path = dup.path AND id <> keep_id;
+          DELETE FROM students WHERE name = dup.name AND path = dup.path AND id <> keep_id;
         END LOOP;
-
-        -- Now it's safe to add the constraint
         ALTER TABLE students ADD CONSTRAINT students_name_path_unique UNIQUE (name, path);
       END IF;
     END$$;
@@ -106,7 +100,7 @@ async function initDB() {
 
 async function getAllStudents() {
   const res = await pool.query(`
-    SELECT s.*, 
+    SELECT s.*,
       COUNT(c.id) as cert_count,
       MAX(gp.generated_at) as last_generated
     FROM students s
@@ -137,8 +131,8 @@ async function getStudent(id) {
 
 async function getStudentCertificates(studentId) {
   const res = await pool.query(`
-    SELECT * FROM certificates 
-    WHERE student_id = $1 
+    SELECT * FROM certificates
+    WHERE student_id = $1
     ORDER BY cert_date ASC
   `, [studentId]);
   return res.rows;
@@ -146,11 +140,20 @@ async function getStudentCertificates(studentId) {
 
 async function getStudentHistory(studentId) {
   const res = await pool.query(`
-    SELECT * FROM generated_packages 
-    WHERE student_id = $1 
+    SELECT id, student_id, filename, path, generated_at, generated_by
+    FROM generated_packages
+    WHERE student_id = $1
     ORDER BY generated_at DESC
   `, [studentId]);
   return res.rows;
+}
+
+async function getPackagePDF(packageId) {
+  const res = await pool.query(
+    'SELECT pdf_data, filename FROM generated_packages WHERE id = $1',
+    [packageId]
+  );
+  return res.rows[0];
 }
 
 async function saveStudentPackage(data) {
@@ -158,7 +161,7 @@ async function saveStudentPackage(data) {
   try {
     await client.query('BEGIN');
 
-    // Upsert student — ON CONFLICT now has a named constraint to target
+    // Upsert student using the unique constraint on (name, path)
     const stuRes = await client.query(`
       INSERT INTO students (name, email, center, path, path_label, course_count, updated_at)
       VALUES ($1, $2, $3, $4, $5, $6, NOW())
@@ -166,8 +169,8 @@ async function saveStudentPackage(data) {
       DO UPDATE SET
         updated_at   = NOW(),
         course_count = EXCLUDED.course_count,
-        center       = COALESCE(EXCLUDED.center, students.center),
-        email        = COALESCE(EXCLUDED.email, students.email)
+        email        = COALESCE(EXCLUDED.email, students.email),
+        center       = COALESCE(EXCLUDED.center, students.center)
       RETURNING id
     `, [
       data.name,
@@ -180,9 +183,8 @@ async function saveStudentPackage(data) {
 
     const studentId = stuRes.rows[0].id;
 
-    // Replace certificates for this student (fresh re-run)
+    // Replace certificates (fresh re-run)
     await client.query('DELETE FROM certificates WHERE student_id = $1', [studentId]);
-
     for (const course of data.courses) {
       await client.query(`
         INSERT INTO certificates (student_id, course_name, subject_area, cert_date, status, area_index)
@@ -190,14 +192,19 @@ async function saveStudentPackage(data) {
       `, [studentId, course.course, course.area, course.date, course.status, course.areaIndex]);
     }
 
-    // Log the generation event
-    await client.query(`
-      INSERT INTO generated_packages (student_id, filename, path, generated_by)
-      VALUES ($1, $2, $3, $4)
-    `, [studentId, data.filename, data.path, data.generatedBy || 'Admin']);
+    // Store PDF bytes if provided
+    const pdfBuffer = data.pdfBase64
+      ? Buffer.from(data.pdfBase64, 'base64')
+      : null;
+
+    const pkgRes = await client.query(`
+      INSERT INTO generated_packages (student_id, filename, path, generated_by, pdf_data)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING id
+    `, [studentId, data.filename, data.path, data.generatedBy || 'Admin', pdfBuffer]);
 
     await client.query('COMMIT');
-    return { studentId };
+    return { studentId, packageId: pkgRes.rows[0].id };
   } catch (e) {
     await client.query('ROLLBACK');
     throw e;
@@ -212,7 +219,7 @@ async function deleteStudent(id) {
 
 async function getStats() {
   const res = await pool.query(`
-    SELECT 
+    SELECT
       COUNT(DISTINCT s.id) as total_students,
       COUNT(DISTINCT CASE WHEN s.path='pre' THEN s.id END) as preschool,
       COUNT(DISTINCT CASE WHEN s.path='inf' THEN s.id END) as infant,
@@ -225,6 +232,70 @@ async function getStats() {
   return res.rows[0];
 }
 
+// ── MAGIC LINK AUTH ──────────────────────────────────────────
+
+async function createMagicToken(email) {
+  const crypto = require('crypto');
+  const token = crypto.randomBytes(48).toString('hex');
+  const expires = new Date(Date.now() + 30 * 60 * 1000); // 30 min
+
+  // Invalidate any previous unused tokens for this email
+  await pool.query(
+    `UPDATE magic_tokens SET used = TRUE WHERE email = $1 AND used = FALSE`,
+    [email.toLowerCase()]
+  );
+
+  await pool.query(
+    `INSERT INTO magic_tokens (email, token, expires_at) VALUES ($1, $2, $3)`,
+    [email.toLowerCase(), token, expires]
+  );
+  return token;
+}
+
+async function verifyMagicToken(token) {
+  const res = await pool.query(
+    `SELECT * FROM magic_tokens
+     WHERE token = $1 AND used = FALSE AND expires_at > NOW()`,
+    [token]
+  );
+  if (!res.rows.length) return null;
+
+  const row = res.rows[0];
+  await pool.query(
+    `UPDATE magic_tokens SET used = TRUE WHERE id = $1`,
+    [row.id]
+  );
+  return row; // { email, ... }
+}
+
+async function findStudentsByEmail(email) {
+  const res = await pool.query(
+    `SELECT s.*,
+       COUNT(c.id) as cert_count,
+       MAX(gp.generated_at) as last_generated
+     FROM students s
+     LEFT JOIN certificates c ON c.student_id = s.id
+     LEFT JOIN generated_packages gp ON gp.student_id = s.id
+     WHERE LOWER(s.email) = LOWER($1)
+     GROUP BY s.id
+     ORDER BY s.path ASC`,
+    [email]
+  );
+  return res.rows;
+}
+
+async function getStudentPackages(studentId) {
+  const res = await pool.query(
+    `SELECT id, filename, path, generated_at, generated_by,
+       (pdf_data IS NOT NULL) as has_pdf
+     FROM generated_packages
+     WHERE student_id = $1
+     ORDER BY generated_at DESC`,
+    [studentId]
+  );
+  return res.rows;
+}
+
 module.exports = {
   pool,
   initDB,
@@ -233,7 +304,12 @@ module.exports = {
   getStudent,
   getStudentCertificates,
   getStudentHistory,
+  getPackagePDF,
   saveStudentPackage,
   deleteStudent,
-  getStats
+  getStats,
+  createMagicToken,
+  verifyMagicToken,
+  findStudentsByEmail,
+  getStudentPackages,
 };
