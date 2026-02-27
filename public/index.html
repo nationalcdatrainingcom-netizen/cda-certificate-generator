@@ -91,6 +91,12 @@ tr:hover td{background:#faf9f5;}
 .conn-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;margin-right:5px;}
 .conn-dot.err{background:#ef4444;}
 @media(max-width:640px){.stats{grid-template-columns:1fr 1fr;}main{padding:16px 13px;}nav{padding:0 13px;}header{padding:0 16px;}}
+.chk-col{width:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.chk-col input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--err);}
+.bulk-bar{display:none;align-items:center;gap:12px;background:#fff0f0;border:1px solid #fca5a5;border-radius:8px;padding:9px 14px;margin-bottom:10px;font-size:.86rem;color:var(--err);font-weight:600;}
+.bulk-bar.show{display:flex;}
+.btn-bulk-del{background:var(--err);color:#fff;border:none;border-radius:7px;padding:7px 16px;font-family:"Source Sans 3",sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;margin-left:auto;}
+.btn-bulk-del:hover{background:#7f1d1d;}
 </style>
 </head>
 <body>
@@ -182,6 +188,15 @@ tr:hover td{background:#faf9f5;}
         <option value="inf">Infant &amp; Toddler</option>
       </select>
       <button class="btn btn-ol" onclick="loadStudents()" style="padding:9px 16px;font-size:.84rem;">↻ Refresh</button>
+    </div>
+    <div id="bulk-bar" class="bulk-bar">
+      <span id="bulk-count">0 selected</span>
+      <button class="btn-bulk-del" onclick="bulkDelete()">🗑 Delete Selected</button>
+      <button onclick="clearSel()" style="background:none;border:none;cursor:pointer;font-size:.84rem;color:var(--gray);margin-left:4px;">✕ Cancel</button>
+    </div>
+    <div class="sc" style="background:var(--gray-lt);padding:10px 18px;">
+      <div class="chk-col"><input type="checkbox" id="chk-all" onchange="toggleSelAll(this.checked)"></div>
+      <div class="si"><span style="font-size:.8rem;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.05em;">Select All</span></div>
     </div>
     <div id="slist"><p style="color:var(--gray);text-align:center;padding:32px 0;">Loading…</p></div>
   </div>
@@ -566,9 +581,10 @@ function drawStudents(fp){
   fp=fp||document.getElementById("fpth")?.value||"";
   const list=fp?allStudents.filter(s=>s.path===fp):allStudents;
   const el=document.getElementById("slist");
-  if(!list.length){el.innerHTML=`<p style="color:var(--gray);text-align:center;padding:32px 0;">No students found.</p>`;return;}
+  if(!list.length){el.innerHTML=`<p style="color:var(--gray);text-align:center;padding:32px 0;">No students found.</p>`;clearSel();return;}
   el.innerHTML=list.map(s=>`
     <div class="sc">
+      <div class="chk-col"><input type="checkbox" class="stu-chk" data-id="${s.id}" onchange="onChkChange()"></div>
       <div class="av">${s.name.charAt(0).toUpperCase()}</div>
       <div class="si">
         <h3>${s.name}</h3>
@@ -580,6 +596,41 @@ function drawStudents(fp){
         <button class="btn-del" onclick="quickDelete(${s.id},'${s.name.replace(/'/g,"\'")}')">🗑 Delete</button>
       </div>
     </div>`).join("");
+  clearSel();
+}
+function getSelIds(){
+  return [...document.querySelectorAll(".stu-chk:checked")].map(c=>c.dataset.id);
+}
+function onChkChange(){
+  const ids=getSelIds();
+  const bar=document.getElementById("bulk-bar");
+  const count=document.getElementById("bulk-count");
+  if(ids.length>0){bar.classList.add("show");count.textContent=ids.length+" selected";}
+  else{bar.classList.remove("show");}
+  const all=document.querySelectorAll(".stu-chk");
+  document.getElementById("chk-all").checked=all.length>0&&ids.length===all.length;
+}
+function toggleSelAll(checked){
+  document.querySelectorAll(".stu-chk").forEach(c=>c.checked=checked);
+  onChkChange();
+}
+function clearSel(){
+  document.querySelectorAll(".stu-chk").forEach(c=>c.checked=false);
+  const chkAll=document.getElementById("chk-all");
+  if(chkAll)chkAll.checked=false;
+  const bar=document.getElementById("bulk-bar");
+  if(bar)bar.classList.remove("show");
+}
+async function bulkDelete(){
+  const ids=getSelIds();
+  if(!ids.length)return;
+  if(!confirm("Permanently delete "+ids.length+" student record"+(ids.length>1?"s":"")+"?"))return;
+  try{
+    await Promise.all(ids.map(id=>fetch("/api/students/"+id,{method:"DELETE"})));
+    await loadStudents();
+    await loadStats();
+    await updateBadge();
+  }catch(e){alert("Could not delete one or more records.");}
 }
 async function quickDelete(id,name){
   if(!confirm("Delete all records for "+name+"?")) return;
