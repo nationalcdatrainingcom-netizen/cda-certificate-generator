@@ -32,7 +32,7 @@ input[type=text],select{border:1.5px solid var(--border);border-radius:7px;paddi
 input:focus,select:focus{outline:none;border-color:var(--gold);background:#fff;}
 .dz{border:2px dashed var(--border);border-radius:10px;padding:26px;text-align:center;cursor:pointer;transition:.18s;background:var(--cream);position:relative;}
 .dz:hover,.dz.over{border-color:var(--gold);background:#fdf9f0;}
-.dz input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;}
+.dz input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;} .dz *{pointer-events:none;} .dz input{pointer-events:auto;}
 .dz .ico{font-size:1.8rem;margin-bottom:5px;}
 .dz p{color:var(--gray);font-size:.86rem;}
 .dz p strong{color:var(--navy);}
@@ -127,12 +127,12 @@ tr:hover td{background:#faf9f5;}
   <div class="card">
     <h2>Upload Activity Report CSV</h2>
     <p class="sub">Upload the learner's CSV from your LMS. The app reads Course, Date, Passed, and Status columns automatically.</p>
-    <div class="dz" id="dz" onclick="document.getElementById('fi').click()">
-      <input type="file" id="fi" accept=".csv" onchange="loadCSV(this.files[0])" style="display:none;">
+    <label class="dz" id="dz" for="fi">
+      <input type="file" id="fi" accept=".csv" onchange="loadCSV(this.files[0])" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;">
       <div class="ico">📄</div>
       <p><strong>Click to upload</strong> or drag &amp; drop a CSV file</p>
       <p id="fn" class="lbl"></p>
-    </div>
+    </label>
   </div>
 
   <div class="card">
