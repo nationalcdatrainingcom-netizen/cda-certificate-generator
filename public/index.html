@@ -128,7 +128,7 @@ tr:hover td{background:#faf9f5;}
     <h2>Upload Activity Report CSV</h2>
     <p class="sub">Upload the learner's CSV from your LMS. The app reads Course, Date, Passed, and Status columns automatically.</p>
     <div class="dz" id="dz" onclick="document.getElementById('fi').click()">
-      <input type="file" id="fi" accept=".csv" onchange="loadCSV(this.files[0])">
+      <input type="file" id="fi" accept=".csv" onchange="loadCSV(this.files[0])" style="display:none;">
       <div class="ico">📄</div>
       <p><strong>Click to upload</strong> or drag &amp; drop a CSV file</p>
       <p id="fn" class="lbl"></p>
@@ -391,9 +391,18 @@ function loadCSV(file) {
 }
 
 const dzel = document.getElementById("dz");
-dzel.addEventListener("dragover", e => { e.preventDefault(); dzel.classList.add("over"); });
-dzel.addEventListener("dragleave", () => dzel.classList.remove("over"));
-dzel.addEventListener("drop", e => { e.preventDefault(); dzel.classList.remove("over"); if(e.dataTransfer.files[0]) loadCSV(e.dataTransfer.files[0]); });
+dzel.addEventListener("dragenter", e => { e.preventDefault(); e.stopPropagation(); dzel.classList.add("over"); });
+dzel.addEventListener("dragover",  e => { e.preventDefault(); e.stopPropagation(); dzel.classList.add("over"); });
+dzel.addEventListener("dragleave", e => { e.stopPropagation(); dzel.classList.remove("over"); });
+dzel.addEventListener("drop", e => {
+  e.preventDefault(); e.stopPropagation();
+  dzel.classList.remove("over");
+  const file = e.dataTransfer.files[0];
+  if(file) loadCSV(file);
+});
+// Prevent browser from opening file if dropped outside the zone
+document.addEventListener("dragover", e => e.preventDefault());
+document.addEventListener("drop", e => e.preventDefault());
 
 // ── MATCHING & DATES ──────────────────────────────────────────
 function buildCSVMap() {
