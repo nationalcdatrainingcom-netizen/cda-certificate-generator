@@ -428,7 +428,7 @@ function renderSummary() {
   document.getElementById('summary').style.display = 'block';
 }
 
-// ─── PDF BUILDER (matches admin generator styling) ────────────────────────────
+// ─── PDF BUILDER — uses same drawing engine as admin panel ──────────────────
 function buildPDF(learner, pathKey, matched) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation:'landscape', unit:'pt', format:'letter' });
@@ -436,23 +436,22 @@ function buildPDF(learner, pathKey, matched) {
   const H = doc.internal.pageSize.getHeight();
   const nm = learner.name;
   const isInf = pathKey === 'INF';
-  const pLabel = isInf ? 'Infant & Toddler CDA Training' : 'Preschool CDA Training';
+  const pLabel = isInf ? 'Infant and Toddler CDA Training' : 'Preschool CDA Training';
 
   const completedCourses = matched.filter(c => c.hit);
   const totalHours = completedCourses.length * 3;
 
-  // Map batch courses into the format drawTranscript/drawCert expect
-  const batchDates = completedCourses.map(c => ({
+  // Map to the row format drawTranscript/drawCert expect
+  const rows = completedCourses.map(c => ({
     course:       c.name,
     area:         c.area,
-    assignedDate: c.date,
-    status:       c.actStatus || 'completed'
+    assignedDate: c.date
   }));
 
   // ── Cover Page ────────────────────────────────────────────────
   doc.setFillColor(255,255,255); doc.rect(0,0,W,H,'F');
-  doc.setDrawColor(26,39,68);  doc.setLineWidth(7);  doc.rect(11,11,W-22,H-22);
-  doc.setDrawColor(201,168,76); doc.setLineWidth(2); doc.rect(18,18,W-36,H-36);
+  doc.setDrawColor(26,39,68);   doc.setLineWidth(7);  doc.rect(11,11,W-22,H-22);
+  doc.setDrawColor(201,168,76); doc.setLineWidth(2);  doc.rect(18,18,W-36,H-36);
   try { doc.addImage(LOGO,'PNG',W/2-110,22,220,62); } catch(e){}
   doc.setFillColor(26,39,68); doc.rect(18,88,W-36,68,'F');
   doc.setFontSize(22); doc.setFont('helvetica','bold'); doc.setTextColor(201,168,76);
@@ -487,7 +486,7 @@ function buildPDF(learner, pathKey, matched) {
   doc.text('Learner: '+nm, 40, 106);
   doc.text('Program: '+pLabel, 40, 120);
   doc.setFont('helvetica','normal');
-  doc.text('Total Hours: '+totalHours+'  |  Courses: '+completedCourses.length+'  |  Generated: '+new Date().toLocaleDateString(), W-40, 106, {align:'right'});
+  doc.text('Total Hours: '+totalHours+'  |  Courses: '+rows.length+'  |  Generated: '+new Date().toLocaleDateString(), W-40, 106, {align:'right'});
   const cw=[26,280,220,44,118];
   const hds=['#','Course Title','CDA Subject Area','Hrs','Date'];
   let ty=134;
@@ -495,7 +494,7 @@ function buildPDF(learner, pathKey, matched) {
   doc.setFontSize(7.5); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
   let tx=26; hds.forEach((h,i)=>{ doc.text(h,tx+3,ty+11); tx+=cw[i]; }); ty+=16;
   doc.setFont('helvetica','normal');
-  batchDates.forEach((r,i)=>{
+  rows.forEach((r,i)=>{
     if(ty>H-50){
       doc.addPage(); doc.setFillColor(255,255,255); doc.rect(0,0,W,H,'F');
       doc.setFillColor(26,39,68); doc.rect(26,28,W-52,16,'F');
@@ -505,19 +504,18 @@ function buildPDF(learner, pathKey, matched) {
     doc.setFillColor(i%2===0?248:255, i%2===0?246:255, i%2===0?240:255);
     doc.rect(26,ty,W-52,14,'F'); doc.setTextColor(50,50,50);
     tx=26;
-    [String(i+1), r.course, AREAS[r.area]||'', '3', fmtDate(r.assignedDate)].forEach((c,ci)=>{
-      doc.text(doc.splitTextToSize(c,cw[ci]-5)[0], tx+3, ty+10); tx+=cw[ci];
+    [String(i+1), r.course, AREAS[r.area]||'', '3', fmtDate(r.assignedDate)].forEach((v,ci)=>{
+      doc.text(doc.splitTextToSize(v,cw[ci]-5)[0], tx+3, ty+10); tx+=cw[ci];
     });
     doc.setDrawColor(215,210,200); doc.setLineWidth(.4); doc.line(26,ty+14,W-26,ty+14); ty+=14;
   });
   doc.setFillColor(26,39,68); doc.rect(26,ty,W-52,18,'F');
   doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(201,168,76);
-  doc.text('TOTAL: '+totalHours+' CONTACT HOURS  —  '+completedCourses.length+' COURSES COMPLETED', W/2, ty+13, {align:'center'});
+  doc.text('TOTAL: '+totalHours+' CONTACT HOURS  —  '+rows.length+' COURSES COMPLETED', W/2, ty+13, {align:'center'});
 
   // ── Certificate Pages ─────────────────────────────────────────
-  completedCourses.forEach((c) => {
+  rows.forEach((row) => {
     doc.addPage();
-    const row = { course: c.name, area: c.area, assignedDate: c.date };
     doc.setFillColor(255,255,255); doc.rect(0,0,W,H,'F');
     doc.setDrawColor(30,100,180);  doc.setLineWidth(10);  doc.rect(12,12,W-24,H-24);
     doc.setDrawColor(220,100,30);  doc.setLineWidth(2.5); doc.rect(21,21,W-42,H-42);
@@ -538,7 +536,7 @@ function buildPDF(learner, pathKey, matched) {
     doc.setDrawColor(220,100,30); doc.setLineWidth(2.5); doc.line(60,y+2,W-60,y+2); y+=14;
     doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.setTextColor(60,60,60);
     doc.text('has successfully completed the 3-hour course', W/2, y+12, {align:'center'}); y+=20;
-    const cLines = doc.splitTextToSize(c.name, W-110);
+    const cLines = doc.splitTextToSize(row.course, W-110);
     const boxH = cLines.length>1 ? 56 : 46;
     doc.setFillColor(220,100,30); doc.roundedRect(38,y,W-76,boxH,5,5,'F');
     doc.setDrawColor(30,100,180); doc.setLineWidth(1.5); doc.roundedRect(38,y,W-76,boxH,5,5,'S');
@@ -546,9 +544,9 @@ function buildPDF(learner, pathKey, matched) {
     doc.text(cLines, W/2, y+(cLines.length>1?20:30), {align:'center', lineHeightFactor:1.5});
     y+=boxH+10;
     doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(30,100,180);
-    doc.text('CDA Subject Area:  '+(AREAS[c.area]||''), W/2, y+12, {align:'center'});
+    doc.text('CDA Subject Area:  '+(AREAS[row.area]||''), W/2, y+12, {align:'center'});
     doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80);
-    doc.text('Hours Awarded: 3 Contact Hours   |   Date of Training: '+fmtDate(c.date), W/2, y+24, {align:'center'});
+    doc.text('Hours Awarded: 3 Contact Hours   |   Date of Training: '+fmtDate(row.assignedDate), W/2, y+24, {align:'center'});
     y+=32;
     doc.setDrawColor(60,150,80); doc.setLineWidth(1.2); doc.line(38,y,W-38,y); y+=10;
     doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(30,100,180);
