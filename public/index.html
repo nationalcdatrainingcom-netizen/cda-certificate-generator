@@ -216,6 +216,16 @@ tr:hover td{background:#faf9f5;}
 <div class="mo" id="smod">
   <div class="md">
     <h2 id="mname"></h2>
+    <div id="memail-row" style="display:flex;align-items:center;gap:8px;margin:-4px 0 12px;flex-wrap:wrap;">
+      <span style="font-size:.8rem;color:var(--gray);font-weight:700;">EMAIL:</span>
+      <span id="memail-val" style="font-size:.84rem;color:var(--navy);"></span>
+      <button onclick="editEmail()" style="background:none;border:1px solid var(--border);border-radius:5px;padding:2px 9px;font-size:.75rem;cursor:pointer;color:var(--gray);">✏️ Edit</button>
+      <span id="memail-edit" style="display:none;flex:1;min-width:200px;">
+        <input type="email" id="memail-input" style="padding:4px 8px;border:1.5px solid var(--gold);border-radius:5px;font-size:.84rem;width:100%;max-width:260px;">
+        <button onclick="saveEmail()" style="background:var(--gold);border:none;border-radius:5px;padding:4px 10px;font-size:.78rem;font-weight:700;cursor:pointer;margin-left:4px;">Save</button>
+        <button onclick="cancelEmail()" style="background:none;border:1px solid var(--border);border-radius:5px;padding:4px 8px;font-size:.78rem;cursor:pointer;margin-left:2px;">Cancel</button>
+      </span>
+    </div>
     <div id="mcnt"></div>
     <div class="ma">
       <button class="btn-del" id="mdel">🗑 Delete Record</button>
@@ -646,6 +656,13 @@ async function viewStu(id){
     const r=await fetch("/api/students/"+id);
     const s=await r.json();
     document.getElementById("mname").textContent=s.name;
+    document.getElementById("smod").dataset.sid=s.id;
+    const emailVal=s.email||'';
+    document.getElementById("memail-val").textContent=emailVal||'(none)';
+    document.getElementById("memail-val").style.color=emailVal?'var(--navy)':'var(--gray)';
+    document.getElementById("memail-edit").style.display='none';
+    document.getElementById("memail-val").style.display='';
+    document.querySelector('#memail-row button').style.display='';
     const rows=(s.certificates||[]).map((c,i)=>`<tr>
       <td style="color:var(--gray);font-weight:700;">${i+1}</td>
       <td>${c.course_name}</td>
@@ -668,6 +685,32 @@ async function viewStu(id){
     document.getElementById("mredl").onclick=()=>redownload(s);
     document.getElementById("smod").classList.add("open");
   }catch(e){alert2("err","Could not load student details.");}
+}
+function editEmail(){
+  const cur=document.getElementById("memail-val").textContent;
+  document.getElementById("memail-input").value=cur==="(none)"?"":cur;
+  document.getElementById("memail-edit").style.display="flex";
+  document.getElementById("memail-val").style.display="none";
+  document.querySelector("#memail-row button").style.display="none";
+  document.getElementById("memail-input").focus();
+}
+function cancelEmail(){
+  document.getElementById("memail-edit").style.display="none";
+  document.getElementById("memail-val").style.display="";
+  document.querySelector("#memail-row button").style.display="";
+}
+async function saveEmail(){
+  const id=document.getElementById("smod").dataset.sid;
+  const email=document.getElementById("memail-input").value.trim().toLowerCase();
+  try{
+    await fetch("/api/students/"+id+"/email",{method:"PATCH",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({email})});
+    document.getElementById("memail-val").textContent=email||"(none)";
+    document.getElementById("memail-val").style.color=email?"var(--navy)":"var(--gray)";
+    cancelEmail();
+    await loadStudents();
+  }catch(e){alert("Could not update email.");}
 }
 function closeMod(){document.getElementById("smod").classList.remove("open");}
 document.getElementById("smod").addEventListener("click",function(e){if(e.target===this)closeMod();});
