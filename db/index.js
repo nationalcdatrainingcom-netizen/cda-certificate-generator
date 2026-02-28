@@ -183,13 +183,22 @@ async function saveStudentPackage(data) {
 
     const studentId = stuRes.rows[0].id;
 
-    // Replace certificates (fresh re-run)
-    await client.query('DELETE FROM certificates WHERE student_id = $1', [studentId]);
-    for (const course of data.courses) {
-      await client.query(`
-        INSERT INTO certificates (student_id, course_name, subject_area, cert_date, status, area_index)
-        VALUES ($1, $2, $3, $4, $5, $6)
-      `, [studentId, course.course, course.area, course.date, course.status, course.areaIndex]);
+    // Only replace certificates if course count or content has changed
+    const existingRes = await client.query(
+      `SELECT course_name, cert_date, status FROM certificates WHERE student_id = $1 ORDER BY course_name`,
+      [studentId]
+    );
+    const existingKey = existingRes.rows.map(r => r.course_name + r.cert_date + r.status).sort().join('|');
+    const incomingKey = data.courses.map(c => c.course + c.date + c.status).sort().join('|');
+
+    if (existingKey !== incomingKey) {
+      await client.query('DELETE FROM certificates WHERE student_id = $1', [studentId]);
+      for (const course of data.courses) {
+        await client.query(`
+          INSERT INTO certificates (student_id, course_name, subject_area, cert_date, status, area_index)
+          VALUES ($1, $2, $3, $4, $5, $6)
+        `, [studentId, course.course, course.area, course.date, course.status, course.areaIndex]);
+      }
     }
 
     // Store PDF bytes if provided
