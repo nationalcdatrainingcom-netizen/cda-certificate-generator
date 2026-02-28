@@ -663,7 +663,7 @@ async function viewStu(id){
     document.getElementById("memail-edit").style.display='none';
     document.getElementById("memail-val").style.display='';
     document.querySelector('#memail-row button').style.display='';
-    const rows=(s.certificates||[]).map((c,i)=>`<tr>
+    const rows=(s.certificates||[]).filter(c=>c.status!=="Incomplete").map((c,i)=>`<tr>
       <td style="color:var(--gray);font-weight:700;">${i+1}</td>
       <td>${c.course_name}</td>
       <td style="font-size:.76rem;color:var(--gray);">${c.subject_area}</td>
@@ -719,7 +719,7 @@ async function delStu(id){
   closeMod();loadStudents();loadStats();updateBadge();
 }
 async function redownload(s){
-  dates=(s.certificates||[]).map(c=>({
+  dates=(s.certificates||[]).filter(c=>c.status!=="Incomplete").map(c=>({
     course:c.course_name,area:AREAS.indexOf(c.subject_area),
     assignedDate:(c.cert_date||"").slice(0,10),status:c.status,adjusted:false,fromCSV:true
   }));
