@@ -316,7 +316,7 @@ async function getStudentPackages(studentId) {
        (pdf_data IS NOT NULL) as has_pdf
      FROM generated_packages
      WHERE student_id = $1
-       AND generated_by = 'Batch Generator'
+       AND generated_by = 'Admin'
        AND pdf_data IS NOT NULL
      ORDER BY generated_at DESC
      LIMIT 1`,
