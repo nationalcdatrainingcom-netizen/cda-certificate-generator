@@ -29,7 +29,6 @@ body {
   color: var(--navy);
 }
 
-/* ── BACKGROUND TEXTURE ── */
 body::before {
   content:'';
   position:fixed; inset:0; z-index:0;
@@ -39,7 +38,6 @@ body::before {
   pointer-events:none;
 }
 
-/* ── HEADER ── */
 header {
   position:relative; z-index:1;
   background: var(--navy);
@@ -63,14 +61,12 @@ header {
 }
 .hdr-nav a:hover { opacity:1; }
 
-/* ── MAIN LAYOUT ── */
 main {
   position:relative; z-index:1;
   max-width:720px; margin:0 auto;
   padding:52px 24px 80px;
 }
 
-/* ── LOGIN CARD ── */
 .login-wrap {
   text-align:center;
   animation: fadeUp .5s ease both;
@@ -152,13 +148,9 @@ main {
   box-shadow:0 4px 16px rgba(26,39,68,.25);
 }
 .btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
-.btn-gold {
-  background: var(--gold); color: var(--navy);
-}
+.btn-gold { background: var(--gold); color: var(--navy); }
 .btn-gold:hover:not(:disabled) { background:#b8963e; }
-.btn-sm {
-  width:auto; padding:9px 20px; font-size:.85rem;
-}
+.btn-sm { width:auto; padding:9px 20px; font-size:.85rem; }
 
 .alert {
   padding:13px 16px; border-radius:8px;
@@ -169,12 +161,9 @@ main {
 .alert-err { background: var(--err-bg);   color: var(--err);    border-color:#fca5a5; }
 .alert-info{ background:#eff6ff; color:#1e40af; border-color:#bfdbfe; }
 
-/* ── PORTAL / RESULTS ── */
 #portal-view { animation: fadeUp .4s ease both; }
 
-.portal-header {
-  margin-bottom:32px;
-}
+.portal-header { margin-bottom:32px; }
 .portal-header h2 {
   font-family:'Cormorant Garamond',serif;
   font-size:1.7rem; font-weight:700;
@@ -202,14 +191,11 @@ main {
   font-family:'Cormorant Garamond',serif;
   font-size:1.3rem; font-weight:700; flex-shrink:0;
 }
-.record-info h3 {
-  color:#fff; font-size:1rem; font-weight:600; margin-bottom:2px;
-}
-.record-info p { color: var(--gold-lt); font-size:.8rem; }
+.record-info h3 { color:#fff; font-size:1rem; font-weight:600; margin-bottom:2px; }
+.record-info p  { color: var(--gold-lt); font-size:.8rem; }
 
 .record-body { padding:22px 26px; }
 
-/* Package list */
 .pkg-list { list-style:none; display:grid; gap:10px; }
 .pkg-item {
   display:flex; align-items:center; gap:14px;
@@ -248,9 +234,6 @@ main {
   transition:.15s; flex-shrink:0;
 }
 .download-btn:hover { background: var(--blue); }
-.download-btn.unavailable {
-  background:#e5e0d5; color: var(--gray); cursor:default;
-}
 
 .no-packages {
   text-align:center; padding:24px;
@@ -258,7 +241,6 @@ main {
   font-style:italic;
 }
 
-/* spinner */
 .spin {
   display:inline-block; width:18px; height:18px;
   border:2.5px solid rgba(255,255,255,.3);
@@ -266,12 +248,6 @@ main {
   animation:spin .7s linear infinite;
 }
 @keyframes spin { to { transform:rotate(360deg); } }
-
-/* divider */
-.divider {
-  border:none; border-top:1px solid var(--border);
-  margin:22px 0;
-}
 
 .footer-note {
   text-align:center; font-size:.78rem; color: var(--gray);
@@ -305,25 +281,21 @@ main {
 
 <main>
 
-  <!-- ── LOGIN VIEW ── -->
+  <!-- LOGIN VIEW -->
   <div id="login-view">
     <div class="login-wrap">
       <div class="login-icon">🎓</div>
       <h1>Access Your Certificates</h1>
       <p>Enter your name and the email address you used for your CDA training. We'll send you a secure link to view and download your certificates.</p>
-
       <div class="card">
         <div id="login-alert" style="display:none"></div>
-
         <div class="field">
           <label>Full Name</label>
-          <input type="text" id="inp-name" placeholder="As it appears on your certificates"
-                 autocomplete="name">
+          <input type="text" id="inp-name" placeholder="As it appears on your certificates" autocomplete="name">
         </div>
         <div class="field">
           <label>Email Address</label>
-          <input type="email" id="inp-email" placeholder="Email used during training"
-                 autocomplete="email">
+          <input type="email" id="inp-email" placeholder="Email used during training" autocomplete="email">
         </div>
         <button class="btn" id="login-btn" onclick="requestLink()">
           <span id="login-btn-text">Send My Access Link</span>
@@ -332,7 +304,7 @@ main {
     </div>
   </div>
 
-  <!-- ── PORTAL VIEW (after token verified) ── -->
+  <!-- PORTAL VIEW -->
   <div id="portal-view" style="display:none">
     <div class="portal-header">
       <h2>Your Training Records</h2>
@@ -350,7 +322,6 @@ main {
 <script>
 let SESSION_EMAIL = '';
 
-// ── LOAD LOGO ────────────────────────────────────────────────
 fetch('/api/assets').then(r => r.json()).then(d => {
   if (d.logo) {
     const img = document.getElementById('hdr-logo');
@@ -358,13 +329,10 @@ fetch('/api/assets').then(r => r.json()).then(d => {
   }
 }).catch(() => {});
 
-// ── ON LOAD: check for token in URL ──────────────────────────
 window.addEventListener('load', () => {
   const params = new URLSearchParams(location.search);
   const token  = params.get('token');
   if (token) verifyToken(token);
-
-  // Allow Enter key on inputs
   ['inp-name','inp-email'].forEach(id => {
     document.getElementById(id).addEventListener('keydown', e => {
       if (e.key === 'Enter') requestLink();
@@ -372,11 +340,9 @@ window.addEventListener('load', () => {
   });
 });
 
-// ── REQUEST MAGIC LINK ────────────────────────────────────────
 async function requestLink() {
   const name  = document.getElementById('inp-name').value.trim();
   const email = document.getElementById('inp-email').value.trim();
-
   if (!name || !email) {
     showAlert('login-alert', 'err', 'Please enter both your name and email address.');
     return;
@@ -385,10 +351,8 @@ async function requestLink() {
     showAlert('login-alert', 'err', 'Please enter a valid email address.');
     return;
   }
-
   setLoginLoading(true);
   hideAlert('login-alert');
-
   try {
     const res = await fetch('/api/auth/request', {
       method:'POST',
@@ -396,12 +360,10 @@ async function requestLink() {
       body: JSON.stringify({ name, email })
     });
     const data = await res.json();
-
     if (!res.ok) throw new Error(data.error || 'Request failed');
-
     showAlert('login-alert', 'ok',
       '✓ Check your inbox! We sent a secure access link to <strong>' +
-      escHtml(email) + '</strong>. It expires in 30 minutes.');
+      escHtml(email) + '</strong>. It expires in 24 hours.');
     document.getElementById('login-btn').disabled = true;
   } catch (e) {
     showAlert('login-alert', 'err', e.message);
@@ -410,22 +372,17 @@ async function requestLink() {
   }
 }
 
-// ── VERIFY TOKEN FROM URL ─────────────────────────────────────
 async function verifyToken(token) {
   try {
     const res  = await fetch('/api/auth/verify/' + encodeURIComponent(token));
     const data = await res.json();
-
     if (!res.ok) {
       showAlert('login-alert', 'err',
         '⚠️ ' + (data.error || 'This link has expired or already been used.') +
         ' Please request a new one below.');
       return;
     }
-
-    // Clear token from URL without reload
     history.replaceState({}, '', '/portal');
-
     SESSION_EMAIL = data.email;
     renderPortal(data);
   } catch (e) {
@@ -433,11 +390,9 @@ async function verifyToken(token) {
   }
 }
 
-// ── RENDER PORTAL ─────────────────────────────────────────────
 function renderPortal(data) {
   document.getElementById('login-view').style.display  = 'none';
   document.getElementById('portal-view').style.display = 'block';
-
   document.querySelector('#portal-email-line strong').textContent = data.email;
 
   const list = document.getElementById('records-list');
@@ -452,35 +407,31 @@ function renderPortal(data) {
     const block = document.createElement('div');
     block.className = 'record-block';
 
-    const initial = student.name.charAt(0).toUpperCase();
-    const pathLabel = student.path_label || (student.path === 'pre' ? 'Preschool CDA' : 'Infant & Toddler CDA');
-    const badgeCls  = student.path === 'inf' ? 'inf' : '';
+    const initial    = student.name.charAt(0).toUpperCase();
+    const pathLabel  = student.path_label || (student.path === 'pre' ? 'Preschool CDA Training' : 'Infant & Toddler CDA Training');
+    const badgeCls   = student.path === 'inf' ? 'inf' : '';
+    const certCount  = (student.certificates || []).length;
+    const totalHours = certCount * 3;
 
-    // Package list
     let pkgsHTML = '';
     if (!student.packages || !student.packages.length) {
-      pkgsHTML = '<p class="no-packages">No downloadable packages on file yet.</p>';
+      pkgsHTML = '<p class="no-packages">No downloadable packages on file yet. Please contact your instructor.</p>';
     } else {
       pkgsHTML = '<ul class="pkg-list">' +
         student.packages.map(pkg => {
-          const date = new Date(pkg.generated_at).toLocaleDateString('en-US',
-            {month:'short', day:'numeric', year:'numeric'});
-          const hasPDF  = pkg.has_pdf;
-          const dlUrl   = `/api/portal/pdf/${pkg.id}?email=${encodeURIComponent(SESSION_EMAIL)}&token=session`;
-          const dlBtn   = hasPDF
-            ? `<a class="download-btn" href="${dlUrl}" download="${escAttr(pkg.filename || 'package.pdf')}">⬇ Download PDF</a>`
-            : `<span class="download-btn unavailable">Not stored</span>`;
-          const label   = pkg.filename
+          const date  = new Date(pkg.generated_at).toLocaleDateString('en-US',
+            { month:'short', day:'numeric', year:'numeric' });
+          const dlUrl = `/api/portal/pdf/${pkg.id}?email=${encodeURIComponent(SESSION_EMAIL)}`;
+          const label = pkg.filename
             ? pkg.filename.replace(/_/g,' ').replace('.pdf','')
-            : 'CDA Package';
-
+            : 'CDA Training Package';
           return `<li class="pkg-item">
             <span class="pkg-icon">📄</span>
             <div class="pkg-info">
               <strong>${escHtml(label)}</strong>
-              <span>Generated ${escHtml(date)} by ${escHtml(pkg.generated_by || 'Admin')}</span>
+              <span>Generated ${escHtml(date)}</span>
             </div>
-            ${dlBtn}
+            <a class="download-btn" href="${dlUrl}" download="${escAttr(pkg.filename || 'package.pdf')}">⬇ Download PDF</a>
           </li>`;
         }).join('') +
       '</ul>';
@@ -491,10 +442,10 @@ function renderPortal(data) {
         <div class="record-avatar">${initial}</div>
         <div class="record-info">
           <h3>${escHtml(student.name)}</h3>
-          <p>${escHtml(pathLabel)} &nbsp;·&nbsp; ${student.course_count || 0} courses &nbsp;·&nbsp; 120 hours</p>
+          <p>${escHtml(pathLabel)} &nbsp;·&nbsp; ${certCount} courses &nbsp;·&nbsp; ${totalHours} hours</p>
         </div>
         <span class="pkg-badge ${badgeCls}" style="margin-left:auto">
-          ${student.path === 'pre' ? 'Preschool' : 'Infant & Toddler'}
+          ${student.path === 'pre' ? 'Preschool' : 'Infant &amp; Toddler'}
         </span>
       </div>
       <div class="record-body">
@@ -508,36 +459,29 @@ function renderPortal(data) {
   });
 }
 
-// ── HELPERS ──────────────────────────────────────────────────
 function setLoginLoading(on) {
   const btn  = document.getElementById('login-btn');
   const text = document.getElementById('login-btn-text');
-  btn.disabled  = on;
-  text.innerHTML = on
-    ? '<span class="spin"></span> Sending…'
-    : 'Send My Access Link';
+  btn.disabled   = on;
+  text.innerHTML = on ? '<span class="spin"></span> Sending…' : 'Send My Access Link';
 }
 
 function showAlert(id, type, msg) {
-  const el = document.getElementById(id);
-  const cls = {ok:'alert-ok', err:'alert-err', info:'alert-info'}[type] || 'alert-info';
-  el.className = 'alert ' + cls;
-  el.innerHTML = msg;
+  const el  = document.getElementById(id);
+  const cls = { ok:'alert-ok', err:'alert-err', info:'alert-info' }[type] || 'alert-info';
+  el.className   = 'alert ' + cls;
+  el.innerHTML   = msg;
   el.style.display = 'block';
 }
 function hideAlert(id) {
-  const el = document.getElementById(id);
-  el.style.display = 'none';
+  document.getElementById(id).style.display = 'none';
 }
-
 function escHtml(s) {
   return String(s)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-function escAttr(s) {
-  return String(s).replace(/"/g,'&quot;');
-}
+function escAttr(s) { return String(s).replace(/"/g,'&quot;'); }
 </script>
 </body>
 </html>
