@@ -262,7 +262,7 @@ async function getStats() {
 async function createMagicToken(email) {
   const crypto = require('crypto');
   const token = crypto.randomBytes(48).toString('hex');
-  const expires = new Date(Date.now() + 30 * 60 * 1000); // 30 min
+  const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
   // Invalidate any previous unused tokens for this email
   await pool.query(
