@@ -1,15 +1,10 @@
-// email.js — Magic link sender using SendGrid
-const sgMail = require('@sendgrid/mail');
-
+// email.js — Magic link sender using SendGrid REST API directly
 const APP_URL = process.env.APP_URL  || 'https://cda-certificate-generator.onrender.com';
-const FROM    = process.env.EMAIL_FROM || 'noreply@nationalcdatraining.com';
-
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const FROM    = process.env.EMAIL_FROM || 'mary@nationalcdatraining.com';
+const API_KEY = process.env.SENDGRID_API_KEY;
 
 async function sendMagicLink(toEmail, token, studentName) {
-  if (!process.env.SENDGRID_API_KEY) {
-    throw new Error('SENDGRID_API_KEY environment variable is not set.');
-  }
+  if (!API_KEY) throw new Error('SENDGRID_API_KEY is not set.');
 
   const link      = `${APP_URL}/portal?token=${token}`;
   const firstName = studentName ? studentName.split(' ')[0] : 'there';
@@ -73,26 +68,34 @@ async function sendMagicLink(toEmail, token, studentName) {
 </body>
 </html>`;
 
-  console.log(`Attempting to send magic link to ${toEmail} from ${FROM}`);
+  const payload = {
+    personalizations: [{ to: [{ email: toEmail }] }],
+    from: { email: FROM, name: 'National CDA Training' },
+    reply_to: { email: FROM },
+    subject: 'Your CDA Training Certificates — Access Link',
+    content: [{ type: 'text/html', value: html }],
+  };
 
-  try {
-    await sgMail.send({
-      to:      toEmail,
-      from:    FROM,
-      subject: 'Your CDA Training Certificates — Access Link',
-      html,
-    });
-    console.log(`Magic link sent successfully to ${toEmail}`);
-  } catch (err) {
-    // Log the full SendGrid error details
-    console.error('SendGrid error code:', err.code);
-    console.error('SendGrid error message:', err.message);
-    if (err.response) {
-      console.error('SendGrid response status:', err.response.status);
-      console.error('SendGrid response body:', JSON.stringify(err.response.body, null, 2));
-    }
-    throw err;
+  console.log(`Sending to: ${toEmail}, from: ${FROM}`);
+  console.log('Payload from field:', JSON.stringify(payload.from));
+
+  const res = await fetch('https://api.sendgrid.com/v3/mail/send', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    console.error('SendGrid status:', res.status);
+    console.error('SendGrid errors:', JSON.stringify(body.errors, null, 2));
+    throw new Error(`SendGrid ${res.status}: ${JSON.stringify(body.errors)}`);
   }
+
+  console.log(`Magic link sent successfully to ${toEmail}`);
 }
 
 module.exports = { sendMagicLink };
