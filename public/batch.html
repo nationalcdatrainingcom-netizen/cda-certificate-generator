@@ -317,6 +317,34 @@ let LEARNERS = [];
 let ZIP_READY = null;
 let LOGO = null, SIG = null;
 
+const CONTRIB = `This 120-hour CDA Training Program was developed by National CDA Training to prepare early childhood professionals for the Child Development Associate (CDA) credential through scenario-based, practice-driven instruction.
+
+Contributors:
+
+Susan Rodenbur — Program Director for a NAEYC Accredited Child Care Program. Susan developed goals for teaching behaviors based on NAEYC materials. These behaviors form the foundation for the scenario-based training. Each class includes 30-60 goals designed to help teachers develop skills and become more effective educators.
+
+Kelly Burlison, BA in Early Childhood Education — Co-Contributor for the scenario-based training.
+
+Dr. Lilla Dale McManis, PhD — Psychologist with expertise in education and learning, child development, parenting, social-emotional wellness, and technology. Editor for the scenario-based training, ensuring each scenario is grounded in early childhood best practices.
+
+Mary Wardlaw, Educational Specialist in Early Childhood — President and Co-Contributor for the scenario-based training.
+
+Celeste Glenn — Developer of the delivery for the content.
+
+National CDA Training | Michigan Child Care Training
+4775 Erie Drive, Buchanan, MI 49107 | Phone: 866-726-3056 | Email: Mary@NationalCDATraining.com`;
+
+const AREAS = [
+  "Planning a Safe and Healthy Learning Environment",
+  "Advancing Children's Physical and Intellectual Development",
+  "Supporting Children's Social and Emotional Development",
+  "Building Productive Relationships with Families",
+  "Managing an Effective Program Operation",
+  "Maintaining a Commitment to Professionalism",
+  "Observing and Recording Children's Behavior",
+  "Understanding the Principles of Child Development and Learning"
+];
+
 function parseCSV(file) {
   Papa.parse(file, {
     header: true,
@@ -400,131 +428,149 @@ function renderSummary() {
   document.getElementById('summary').style.display = 'block';
 }
 
-// ─── PDF BUILDER ──────────────────────────────────────────────────────────────
+// ─── PDF BUILDER (matches admin generator styling) ────────────────────────────
 function buildPDF(learner, pathKey, matched) {
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation:'landscape', unit:'in', format:'letter' });
-  const W=11, H=8.5;
+  const doc = new jsPDF({ orientation:'landscape', unit:'pt', format:'letter' });
+  const W = doc.internal.pageSize.getWidth();
+  const H = doc.internal.pageSize.getHeight();
   const nm = learner.name;
-  const isInf = pathKey==='INF';
-  const pathLabel = isInf ? 'Infant & Toddler CDA' : 'Preschool CDA';
-  const pathFull  = isInf ? 'Infant & Toddler Child Development Associate' : 'Preschool Child Development Associate';
+  const isInf = pathKey === 'INF';
+  const pLabel = isInf ? 'Infant & Toddler CDA Training' : 'Preschool CDA Training';
 
-  // ── Cover Page ────────────────────────────────────────────────
-  doc.setFillColor(26,39,68); doc.rect(0,0,W,H,'F');
-  doc.setFillColor(196,154,42); doc.rect(0,H-1,W,1,'F');
-  if (LOGO) { try { doc.addImage(LOGO,'PNG',W/2-1,0.35,2,1.1); } catch(e){} }
-  const cy = LOGO ? 1.95 : 1.4;
-  doc.setFont('times','bold'); doc.setFontSize(10); doc.setTextColor(196,154,42);
-  doc.text('NATIONAL CDA TRAINING', W/2, cy, {align:'center'});
-  doc.setFontSize(21); doc.setTextColor(255,255,255);
-  doc.text('Certificate of Completion', W/2, cy+0.5, {align:'center'});
-  doc.setFontSize(9); doc.setTextColor(196,154,42);
-  doc.text(pathFull.toUpperCase(), W/2, cy+0.9, {align:'center'});
-  doc.setFont('times','normal'); doc.setFontSize(8.5); doc.setTextColor(170,188,218);
-  doc.text('This certifies that', W/2, cy+1.6, {align:'center'});
-  doc.setFont('times','bold'); doc.setFontSize(25); doc.setTextColor(255,255,255);
-  doc.text(nm, W/2, cy+2.2, {align:'center'});
-  doc.setFont('times','normal'); doc.setFontSize(8.5); doc.setTextColor(170,188,218);
   const completedCourses = matched.filter(c => c.hit);
   const totalHours = completedCourses.length * 3;
-  doc.text(`has successfully completed ${totalHours} clock hours of`, W/2, cy+2.65, {align:'center'});
-  doc.setFontSize(11); doc.setTextColor(196,154,42);
-  doc.text(pathLabel+' Training', W/2, cy+3.0, {align:'center'});
-  doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(255,255,255);
-  doc.text('National CDA Training  ·  nationalcdatraining.com', W/2, H-0.42, {align:'center'});
+
+  // Map batch courses into the format drawTranscript/drawCert expect
+  const batchDates = completedCourses.map(c => ({
+    course:       c.name,
+    area:         c.area,
+    assignedDate: c.date,
+    status:       c.actStatus || 'completed'
+  }));
+
+  // ── Cover Page ────────────────────────────────────────────────
+  doc.setFillColor(255,255,255); doc.rect(0,0,W,H,'F');
+  doc.setDrawColor(26,39,68);  doc.setLineWidth(7);  doc.rect(11,11,W-22,H-22);
+  doc.setDrawColor(201,168,76); doc.setLineWidth(2); doc.rect(18,18,W-36,H-36);
+  try { doc.addImage(LOGO,'PNG',W/2-110,22,220,62); } catch(e){}
+  doc.setFillColor(26,39,68); doc.rect(18,88,W-36,68,'F');
+  doc.setFontSize(22); doc.setFont('helvetica','bold'); doc.setTextColor(201,168,76);
+  doc.text(totalHours+'-HOUR CDA TRAINING PROGRAM', W/2, 120, {align:'center'});
+  doc.setFontSize(13); doc.setTextColor(232,213,163);
+  doc.text(pLabel, W/2, 150, {align:'center'});
+  doc.setDrawColor(201,168,76); doc.setLineWidth(1.5); doc.line(50,168,W-50,168);
+  doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(100,100,100);
+  doc.text('Prepared for:', W/2, 186, {align:'center'});
+  doc.setFontSize(22); doc.setTextColor(26,39,68);
+  doc.text(nm, W/2, 212, {align:'center'});
+  doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(60,60,60);
+  const cl = doc.splitTextToSize(CONTRIB, W-120);
+  doc.text(cl.slice(0,22), 60, 232);
+  doc.setFillColor(26,39,68); doc.rect(18,H-36,W-36,18,'F');
+  doc.setFontSize(8); doc.setTextColor(201,168,76);
+  doc.text('National CDA Training  |  866-726-3056  |  Mary@NationalCDATraining.com  |  4775 Erie Drive, Buchanan, MI 49107', W/2, H-24, {align:'center'});
 
   // ── Transcript Page ───────────────────────────────────────────
   doc.addPage();
-  const mg=0.5;
-  doc.setFillColor(26,39,68); doc.rect(0,0,W,1.1,'F');
-  doc.setFont('times','bold'); doc.setFontSize(13); doc.setTextColor(255,255,255);
-  doc.text('Official Training Transcript', W/2, 0.46, {align:'center'});
-  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(196,154,42);
-  doc.text(`${pathLabel} — ${totalHours} Clock Hours`, W/2, 0.7, {align:'center'});
-  doc.setFontSize(7); doc.setTextColor(175,195,225);
-  doc.text(nm, W/2, 0.94, {align:'center'});
-
-  const TY=1.25;
-  doc.setFillColor(240,237,228); doc.rect(mg,TY,W-mg*2,0.26,'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(80,80,80);
-  doc.text('#',   mg+0.08, TY+0.18);
-  doc.text('Course Title', mg+0.42, TY+0.18);
-  doc.text('Subject Area', mg+5.35, TY+0.18);
-  doc.text('Date',         mg+8.0,  TY+0.18);
-  doc.text('Hrs',          mg+9.35, TY+0.18);
-
-  const rH=0.162, rY=TY+0.26;
-  completedCourses.forEach((c,i) => {
-    const y=rY+i*rH;
-    doc.setFillColor(...(i%2===0?[255,255,255]:[248,246,240]));
-    doc.rect(mg,y,W-mg*2,rH,'F');
-    doc.setFont('helvetica','normal'); doc.setFontSize(6.2); doc.setTextColor(60,60,60);
-    doc.text(String(i+1).padStart(2,'0'), mg+0.08, y+rH-0.04);
-    doc.text(c.name,                      mg+0.42, y+rH-0.04);
-    const sa=SA[c.area]; doc.setTextColor(...hex2rgb(sa.col));
-    doc.text(sa.short,                    mg+5.35, y+rH-0.04);
-    doc.setTextColor(60,60,60);
-    doc.text(fmtDate(c.date),             mg+8.0,  y+rH-0.04);
-    doc.text('3',                         mg+9.5,  y+rH-0.04);
+  doc.setFillColor(255,255,255); doc.rect(0,0,W,H,'F');
+  doc.setDrawColor(41,98,163); doc.setLineWidth(7); doc.rect(11,11,W-22,H-22);
+  doc.setDrawColor(201,168,76); doc.setLineWidth(2); doc.rect(18,18,W-36,H-36);
+  doc.setFillColor(26,39,68); doc.rect(18,18,W-36,62,'F');
+  doc.setFontSize(18); doc.setFont('helvetica','bold'); doc.setTextColor(201,168,76);
+  doc.text('OFFICIAL TRAINING TRANSCRIPT', W/2, 46, {align:'center'});
+  doc.setFontSize(9); doc.setTextColor(232,213,163);
+  doc.text('National CDA Training  |  Michigan Child Care Training  |  4775 Erie Drive, Buchanan, MI 49107  |  866-726-3056', W/2, 66, {align:'center'});
+  doc.setFillColor(245,242,235); doc.roundedRect(26,90,W-52,34,4,4,'F');
+  doc.setDrawColor(201,168,76); doc.setLineWidth(1); doc.roundedRect(26,90,W-52,34,4,4,'S');
+  doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(26,39,68);
+  doc.text('Learner: '+nm, 40, 106);
+  doc.text('Program: '+pLabel, 40, 120);
+  doc.setFont('helvetica','normal');
+  doc.text('Total Hours: '+totalHours+'  |  Courses: '+completedCourses.length+'  |  Generated: '+new Date().toLocaleDateString(), W-40, 106, {align:'right'});
+  const cw=[26,280,220,44,118];
+  const hds=['#','Course Title','CDA Subject Area','Hrs','Date'];
+  let ty=134;
+  doc.setFillColor(26,39,68); doc.rect(26,ty,W-52,16,'F');
+  doc.setFontSize(7.5); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
+  let tx=26; hds.forEach((h,i)=>{ doc.text(h,tx+3,ty+11); tx+=cw[i]; }); ty+=16;
+  doc.setFont('helvetica','normal');
+  batchDates.forEach((r,i)=>{
+    if(ty>H-50){
+      doc.addPage(); doc.setFillColor(255,255,255); doc.rect(0,0,W,H,'F');
+      doc.setFillColor(26,39,68); doc.rect(26,28,W-52,16,'F');
+      doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255); doc.setFontSize(7.5);
+      tx=26; hds.forEach((h,j)=>{ doc.text(h,tx+3,39); tx+=cw[j]; }); ty=44; doc.setFont('helvetica','normal');
+    }
+    doc.setFillColor(i%2===0?248:255, i%2===0?246:255, i%2===0?240:255);
+    doc.rect(26,ty,W-52,14,'F'); doc.setTextColor(50,50,50);
+    tx=26;
+    [String(i+1), r.course, AREAS[r.area]||'', '3', fmtDate(r.assignedDate)].forEach((c,ci)=>{
+      doc.text(doc.splitTextToSize(c,cw[ci]-5)[0], tx+3, ty+10); tx+=cw[ci];
+    });
+    doc.setDrawColor(215,210,200); doc.setLineWidth(.4); doc.line(26,ty+14,W-26,ty+14); ty+=14;
   });
-  const fY=rY+completedCourses.length*rH+0.1;
-  doc.setFillColor(26,39,68); doc.rect(mg,fY,W-mg*2,0.28,'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(196,154,42);
-  doc.text(`TOTAL: ${completedCourses.length} COURSES — ${totalHours} CLOCK HOURS`, W-mg-0.12, fY+0.19, {align:'right'});
+  doc.setFillColor(26,39,68); doc.rect(26,ty,W-52,18,'F');
+  doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(201,168,76);
+  doc.text('TOTAL: '+totalHours+' CONTACT HOURS  —  '+completedCourses.length+' COURSES COMPLETED', W/2, ty+13, {align:'center'});
 
-  // ── Certificate Pages (completed courses only) ────────────────
+  // ── Certificate Pages ─────────────────────────────────────────
   completedCourses.forEach((c) => {
     doc.addPage();
-    const sa=SA[c.area]; const [r,g,b]=hex2rgb(sa.col);
+    const row = { course: c.name, area: c.area, assignedDate: c.date };
     doc.setFillColor(255,255,255); doc.rect(0,0,W,H,'F');
-    doc.setFillColor(r,g,b); doc.rect(0,0,W,0.82,'F');
-    doc.setFillColor(r,g,b); doc.rect(0,0,0.07,H,'F'); doc.rect(W-0.07,0,0.07,H,'F');
-
-    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(255,255,255);
-    doc.text(sa.label.toUpperCase(), W/2, 0.34, {align:'center'});
-    doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(255,255,255);
-    doc.text('CDA SUBJECT AREA '+(c.area+1)+' OF 8', W/2, 0.56, {align:'center'});
-
-    if (LOGO) { try { doc.addImage(LOGO,'PNG',W/2-0.65,0.92,1.3,0.72); } catch(e){} }
-    const cY2 = LOGO ? 2.0 : 1.55;
-
-    doc.setFont('times','italic'); doc.setFontSize(9); doc.setTextColor(120,120,120);
-    doc.text('This certifies that', W/2, cY2, {align:'center'});
-    doc.setFont('times','bold'); doc.setFontSize(22); doc.setTextColor(26,39,68);
-    doc.text(nm, W/2, cY2+0.58, {align:'center'});
-    const nw=doc.getTextWidth(nm);
-    doc.setDrawColor(196,154,42); doc.setLineWidth(0.018);
-    doc.line(W/2-nw/2-0.08, cY2+0.66, W/2+nw/2+0.08, cY2+0.66);
-
-    doc.setFont('times','normal'); doc.setFontSize(9); doc.setTextColor(100,100,100);
-    doc.text('has successfully completed', W/2, cY2+1.05, {align:'center'});
-
-    doc.setFont('times','bold'); doc.setFontSize(14); doc.setTextColor(r,g,b);
-    const split=doc.splitTextToSize(c.name, 6.5);
-    const cY3=cY2+1.48;
-    doc.text(split, W/2, cY3, {align:'center'});
-
-    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(100,100,100);
-    doc.text('3 Clock Hours  ·  '+pathLabel, W/2, cY3+split.length*0.2+0.22, {align:'center'});
-
-    const dY=H-1.6;
-    doc.setFont('times','italic'); doc.setFontSize(8.5); doc.setTextColor(100,100,100);
-    doc.text('Awarded: '+fmtDate(c.date), W/2, dY, {align:'center'});
-
-    if (SIG) { try { doc.addImage(SIG,'JPEG',W/2-0.85,dY+0.08,1.7,0.52); } catch(e){} }
-    doc.setDrawColor(160,160,160); doc.setLineWidth(0.01);
-    doc.line(W/2-1.4, dY+0.65, W/2+1.4, dY+0.65);
-    doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(26,39,68);
-    doc.text('National CDA Training', W/2, dY+0.82, {align:'center'});
-    doc.setFont('helvetica','normal'); doc.setFontSize(6.2); doc.setTextColor(130,130,130);
-    doc.text('nationalcdatraining.com', W/2, dY+0.98, {align:'center'});
-
-    doc.setFillColor(196,154,42); doc.rect(0,H-0.16,W,0.16,'F');
+    doc.setDrawColor(30,100,180);  doc.setLineWidth(10);  doc.rect(12,12,W-24,H-24);
+    doc.setDrawColor(220,100,30);  doc.setLineWidth(2.5); doc.rect(21,21,W-42,H-42);
+    doc.setDrawColor(60,150,80);   doc.setLineWidth(1.2); doc.rect(25,25,W-50,H-50);
+    let y=32;
+    try { doc.addImage(LOGO,'PNG',W/2-130,y,260,70); } catch(e){}
+    y+=82;
+    doc.setFillColor(30,100,180); doc.rect(25,y,W-50,54,'F');
+    doc.setFontSize(26); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
+    doc.text('CERTIFICATE OF COMPLETION', W/2, y+22, {align:'center'});
+    doc.setFontSize(10); doc.setTextColor(255,200,100);
+    doc.text(totalHours+'-HOUR CDA TRAINING PROGRAM  |  '+pLabel.toUpperCase(), W/2, y+44, {align:'center'});
+    y+=62;
+    doc.setFontSize(10); doc.setFont('helvetica','italic'); doc.setTextColor(100,100,100);
+    doc.text('This certifies that', W/2, y+14, {align:'center'}); y+=20;
+    doc.setFontSize(42); doc.setFont('helvetica','normal'); doc.setTextColor(30,100,180);
+    doc.text(nm, W/2, y+34, {align:'center'}); y+=40;
+    doc.setDrawColor(220,100,30); doc.setLineWidth(2.5); doc.line(60,y+2,W-60,y+2); y+=14;
+    doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.setTextColor(60,60,60);
+    doc.text('has successfully completed the 3-hour course', W/2, y+12, {align:'center'}); y+=20;
+    const cLines = doc.splitTextToSize(c.name, W-110);
+    const boxH = cLines.length>1 ? 56 : 46;
+    doc.setFillColor(220,100,30); doc.roundedRect(38,y,W-76,boxH,5,5,'F');
+    doc.setDrawColor(30,100,180); doc.setLineWidth(1.5); doc.roundedRect(38,y,W-76,boxH,5,5,'S');
+    doc.setFontSize(cLines.length>1?15:20); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
+    doc.text(cLines, W/2, y+(cLines.length>1?20:30), {align:'center', lineHeightFactor:1.5});
+    y+=boxH+10;
+    doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(30,100,180);
+    doc.text('CDA Subject Area:  '+(AREAS[c.area]||''), W/2, y+12, {align:'center'});
+    doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80);
+    doc.text('Hours Awarded: 3 Contact Hours   |   Date of Training: '+fmtDate(c.date), W/2, y+24, {align:'center'});
+    y+=32;
+    doc.setDrawColor(60,150,80); doc.setLineWidth(1.2); doc.line(38,y,W-38,y); y+=10;
+    doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(30,100,180);
+    doc.text('National CDA Training  |  Michigan Child Care Training', 42, y+12);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(80,80,80);
+    doc.text('4775 Erie Drive, Buchanan, MI 49107', 42, y+24);
+    doc.text('Phone: 866-726-3056  |  Mary@NationalCDATraining.com', 42, y+36);
+    try { doc.addImage(SIG,'JPEG',W-230,y,170,52); } catch(e){}
+    doc.setDrawColor(30,100,180); doc.setLineWidth(1); doc.line(W-234,y+55,W-28,y+55);
+    doc.setFontSize(8.5); doc.setFont('helvetica','bold'); doc.setTextColor(30,100,180);
+    doc.text('Mary Wardlaw, President — Authorized Signature', W-234, y+64);
+    y+=72;
+    doc.setDrawColor(60,150,80); doc.setLineWidth(1); doc.line(38,y,W-38,y); y+=8;
+    doc.setFontSize(8.5); doc.setFont('helvetica','bolditalic'); doc.setTextColor(30,100,180);
+    doc.text('National CDA Training Course Contributors:', W/2, y+11, {align:'center'});
+    doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(60,60,60);
+    doc.text('Kelly Burlison, BA Early Childhood Education  |  Mary Wardlaw, Educational Specialist in Early Childhood  |  Dr. Lilla Dale McManis, PhD — Education, Learning & Child Development', W/2, y+22, {align:'center'});
   });
 
   return doc;
 }
+
 
 // ─── BATCH GENERATION ────────────────────────────────────────────────────────
 async function startGeneration() {
