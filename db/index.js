@@ -310,12 +310,16 @@ async function findStudentsByEmail(email) {
 }
 
 async function getStudentPackages(studentId) {
+  // Only return the single most recent batch-generated package
   const res = await pool.query(
     `SELECT id, filename, path, generated_at, generated_by,
        (pdf_data IS NOT NULL) as has_pdf
      FROM generated_packages
      WHERE student_id = $1
-     ORDER BY generated_at DESC`,
+       AND generated_by = 'Batch Generator'
+       AND pdf_data IS NOT NULL
+     ORDER BY generated_at DESC
+     LIMIT 1`,
     [studentId]
   );
   return res.rows;
