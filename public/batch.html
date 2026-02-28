@@ -280,11 +280,13 @@ function fmtDate(iso) {
  * This is the single source of truth used by BOTH buildPDF and the DB save.
  */
 function buildMatchedCourses(learnerDone) {
-  // Step 1: match courses to completions
+  // Step 1: match courses to completions (any activity counts)
   const matched = COURSES.map(c => {
     const key = Object.keys(learnerDone).find(t => matchKW(t, c.kw));
-    const rawDate = key ? newestDate(learnerDone[key]) : null;
-    return { ...c, rawDate, hit: !!key };
+    const entry = key ? learnerDone[key] : null;
+    const rawDate = entry ? newestDate(entry.dates || entry) : null;
+    const actStatus = entry ? (entry.status || 'completed') : null;
+    return { ...c, rawDate, hit: !!key, actStatus };
   });
 
   // Step 2: fallback dates for unmatched — walk backward from most recent hit date
@@ -337,9 +339,14 @@ function buildMap(rows) {
     if (!map[email]) map[email] = { email, name:`${first} ${last}`.trim(), groups:new Set(), done:{} };
     if (grp) grp.split(',').forEach(g => map[email].groups.add(g.trim()));
     const excl = norm(course).includes('cda introduction') || norm(course).includes('120 clock hours');
-    if (status==='completed' && course && !excl) {
-      if (!map[email].done[course]) map[email].done[course]=[];
-      if (date) map[email].done[course].push(date);
+    if (status && course && !excl) {
+      if (!map[email].done[course]) map[email].done[course]={ dates:[], status };
+      if (date) map[email].done[course].dates.push(date);
+      // Keep the 'best' status — completed > in_progress > started
+      const rank = s => s==='completed'?2:s==='in_progress'||s==='in progress'?1:0;
+      if (rank(status) > rank(map[email].done[course].status)) {
+        map[email].done[course].status = status;
+      }
     }
   });
 
@@ -585,7 +592,7 @@ async function startGeneration() {
         area:      c.areaLabel,
         areaIndex: c.area,
         date:      c.date,
-        status:    'Pass'
+        status:    c.actStatus === 'completed' ? 'Pass' : 'In Progress'
       }));
 
       try {
