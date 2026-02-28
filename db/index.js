@@ -280,17 +280,11 @@ async function createMagicToken(email) {
 async function verifyMagicToken(token) {
   const res = await pool.query(
     `SELECT * FROM magic_tokens
-     WHERE token = $1 AND used = FALSE AND expires_at > NOW()`,
+     WHERE token = $1 AND expires_at > NOW()`,
     [token]
   );
   if (!res.rows.length) return null;
-
-  const row = res.rows[0];
-  await pool.query(
-    `UPDATE magic_tokens SET used = TRUE WHERE id = $1`,
-    [row.id]
-  );
-  return row; // { email, ... }
+  return res.rows[0]; // { email, ... }
 }
 
 async function findStudentsByEmail(email) {
