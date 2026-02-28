@@ -1,10 +1,5 @@
 // email.js — Magic link sender using SendGrid
-// Required env vars:
-//   SENDGRID_API_KEY  — your SendGrid API key
-//   EMAIL_FROM        — verified sender address (e.g. noreply@nationalcdatraining.com)
-//   APP_URL           — base URL (e.g. https://cda-certificate-generator.onrender.com)
-
-const sgMail  = require('@sendgrid/mail');
+const sgMail = require('@sendgrid/mail');
 
 const APP_URL = process.env.APP_URL  || 'https://cda-certificate-generator.onrender.com';
 const FROM    = process.env.EMAIL_FROM || 'noreply@nationalcdatraining.com';
@@ -26,7 +21,7 @@ async function sendMagicLink(toEmail, token, studentName) {
 <body style="margin:0;padding:0;background:#f5f4f0;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f4f0;padding:40px 20px;">
     <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;">
         <tr>
           <td style="background:#1a2744;padding:32px 40px;text-align:center;">
             <div style="font-family:'Georgia',serif;font-size:22px;color:#c9a84c;font-weight:bold;">
@@ -78,14 +73,26 @@ async function sendMagicLink(toEmail, token, studentName) {
 </body>
 </html>`;
 
-  await sgMail.send({
-    to:      toEmail,
-    from:    FROM,
-    subject: 'Your CDA Training Certificates — Access Link',
-    html,
-  });
+  console.log(`Attempting to send magic link to ${toEmail} from ${FROM}`);
 
-  console.log(`Magic link sent to ${toEmail}`);
+  try {
+    await sgMail.send({
+      to:      toEmail,
+      from:    FROM,
+      subject: 'Your CDA Training Certificates — Access Link',
+      html,
+    });
+    console.log(`Magic link sent successfully to ${toEmail}`);
+  } catch (err) {
+    // Log the full SendGrid error details
+    console.error('SendGrid error code:', err.code);
+    console.error('SendGrid error message:', err.message);
+    if (err.response) {
+      console.error('SendGrid response status:', err.response.status);
+      console.error('SendGrid response body:', JSON.stringify(err.response.body, null, 2));
+    }
+    throw err;
+  }
 }
 
 module.exports = { sendMagicLink };
