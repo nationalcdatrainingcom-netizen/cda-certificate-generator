@@ -65,6 +65,20 @@ app.post('/api/packages', async (req, res) => {
   }
 });
 
+// Update student email
+app.patch('/api/students/:id/email', async (req, res) => {
+  try {
+    const { email } = req.body;
+    await db.pool.query(
+      'UPDATE students SET email = $1 WHERE id = $2',
+      [email || null, req.params.id]
+    );
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Delete single student
 app.delete('/api/students/:id', async (req, res) => {
   try {
