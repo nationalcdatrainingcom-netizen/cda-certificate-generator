@@ -21,239 +21,87 @@
   --shad:   0 8px 40px rgba(26,39,68,.13);
 }
 * { box-sizing:border-box; margin:0; padding:0; }
-
-body {
-  font-family:'DM Sans',sans-serif;
-  background: var(--cream);
-  min-height:100vh;
-  color: var(--navy);
-}
-
+body { font-family:'DM Sans',sans-serif; background:var(--cream); min-height:100vh; color:var(--navy); }
 body::before {
-  content:'';
-  position:fixed; inset:0; z-index:0;
-  background:
-    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(201,168,76,.07) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 80% at 80% 90%, rgba(26,39,68,.06) 0%, transparent 60%);
+  content:''; position:fixed; inset:0; z-index:0;
+  background: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(201,168,76,.07) 0%, transparent 60%),
+              radial-gradient(ellipse 60% 80% at 80% 90%, rgba(26,39,68,.06) 0%, transparent 60%);
   pointer-events:none;
 }
-
 header {
-  position:relative; z-index:1;
-  background: var(--navy);
-  padding:0 40px;
-  display:flex; align-items:center; justify-content:space-between;
-  height:68px;
-  box-shadow:0 2px 16px rgba(0,0,0,.25);
+  position:relative; z-index:1; background:var(--navy);
+  padding:0 40px; display:flex; align-items:center; justify-content:space-between;
+  height:68px; box-shadow:0 2px 16px rgba(0,0,0,.25);
 }
 .hdr-brand { display:flex; align-items:center; gap:14px; }
 .hdr-brand img { height:40px; width:auto; display:none; }
-.hdr-title {
-  font-family:'Cormorant Garamond',serif;
-  color: var(--gold);
-  font-size:1.3rem; font-weight:600; letter-spacing:.01em;
-}
-.hdr-sub { color: var(--gold-lt); font-size:.78rem; }
+.hdr-title { font-family:'Cormorant Garamond',serif; color:var(--gold); font-size:1.3rem; font-weight:600; letter-spacing:.01em; }
+.hdr-sub { color:var(--gold-lt); font-size:.78rem; }
 .hdr-nav { display:flex; gap:20px; align-items:center; }
-.hdr-nav a {
-  color: var(--gold-lt); text-decoration:none;
-  font-size:.82rem; opacity:.8; transition:.15s;
-}
+.hdr-nav a { color:var(--gold-lt); text-decoration:none; font-size:.82rem; opacity:.8; transition:.15s; }
 .hdr-nav a:hover { opacity:1; }
-
-main {
-  position:relative; z-index:1;
-  max-width:720px; margin:0 auto;
-  padding:52px 24px 80px;
-}
-
-.login-wrap {
-  text-align:center;
-  animation: fadeUp .5s ease both;
-}
-@keyframes fadeUp {
-  from { opacity:0; transform:translateY(20px); }
-  to   { opacity:1; transform:translateY(0);    }
-}
-
+main { position:relative; z-index:1; max-width:720px; margin:0 auto; padding:52px 24px 80px; }
+.login-wrap { text-align:center; animation:fadeUp .5s ease both; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
 .login-icon {
   width:72px; height:72px; border-radius:50%;
-  background:linear-gradient(135deg, var(--navy) 0%, #2a3f6e 100%);
-  border:3px solid var(--gold);
-  display:flex; align-items:center; justify-content:center;
-  margin:0 auto 24px;
-  font-size:1.8rem;
+  background:linear-gradient(135deg,var(--navy) 0%,#2a3f6e 100%);
+  border:3px solid var(--gold); display:flex; align-items:center; justify-content:center;
+  margin:0 auto 24px; font-size:1.8rem;
 }
-
-.login-wrap h1 {
-  font-family:'Cormorant Garamond',serif;
-  font-size:2rem; font-weight:700;
-  color: var(--navy);
-  margin-bottom:8px;
-}
-.login-wrap p {
-  color: var(--gray); font-size:.95rem; line-height:1.6;
-  max-width:400px; margin:0 auto 36px;
-}
-
-.card {
-  background:#fff;
-  border-radius:16px;
-  border:1px solid var(--border);
-  box-shadow: var(--shad);
-  padding:36px 40px;
-  text-align:left;
-}
-
+.login-wrap h1 { font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:700; color:var(--navy); margin-bottom:8px; }
+.login-wrap > p { color:var(--gray); font-size:.95rem; line-height:1.6; max-width:400px; margin:0 auto 24px; }
+.card { background:#fff; border-radius:16px; border:1px solid var(--border); box-shadow:var(--shad); padding:36px 40px; text-align:left; }
 .field { margin-bottom:20px; }
-.field label {
-  display:block;
-  font-size:.8rem; font-weight:600;
-  color: var(--navy);
-  text-transform:uppercase; letter-spacing:.06em;
-  margin-bottom:7px;
-}
+.field label { display:block; font-size:.8rem; font-weight:600; color:var(--navy); text-transform:uppercase; letter-spacing:.06em; margin-bottom:7px; }
 .field input {
-  width:100%;
-  padding:12px 16px;
-  border:1.5px solid var(--border);
-  border-radius:8px;
-  font-family:'DM Sans',sans-serif;
-  font-size:.95rem; color: var(--navy);
-  background:#fdfcf9;
-  transition:.18s;
+  width:100%; padding:12px 16px; border:1.5px solid var(--border); border-radius:8px;
+  font-family:'DM Sans',sans-serif; font-size:.95rem; color:var(--navy); background:#fdfcf9; transition:.18s;
 }
-.field input:focus {
-  outline:none;
-  border-color: var(--gold);
-  box-shadow:0 0 0 3px rgba(201,168,76,.15);
-  background:#fff;
-}
-
+.field input:focus { outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(201,168,76,.15); background:#fff; }
 .btn {
-  width:100%;
-  padding:14px;
-  background: var(--navy);
-  color:#fff;
-  border:none; border-radius:8px;
-  font-family:'DM Sans',sans-serif;
-  font-size:.95rem; font-weight:600;
-  cursor:pointer;
-  transition:.18s;
+  width:100%; padding:14px; background:var(--navy); color:#fff; border:none; border-radius:8px;
+  font-family:'DM Sans',sans-serif; font-size:.95rem; font-weight:600; cursor:pointer; transition:.18s;
   display:flex; align-items:center; justify-content:center; gap:8px;
 }
-.btn:hover:not(:disabled) {
-  background:#243160;
-  transform:translateY(-1px);
-  box-shadow:0 4px 16px rgba(26,39,68,.25);
-}
+.btn:hover:not(:disabled) { background:#243160; transform:translateY(-1px); box-shadow:0 4px 16px rgba(26,39,68,.25); }
 .btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
-.btn-gold { background: var(--gold); color: var(--navy); }
-.btn-gold:hover:not(:disabled) { background:#b8963e; }
-.btn-sm { width:auto; padding:9px 20px; font-size:.85rem; }
-
-.alert {
-  padding:13px 16px; border-radius:8px;
-  font-size:.88rem; margin-bottom:20px;
-  border:1px solid transparent;
+.alert { padding:13px 16px; border-radius:8px; font-size:.88rem; margin-bottom:20px; border:1px solid transparent; }
+.alert-ok   { background:var(--green-bg); color:var(--green);  border-color:#86efac; }
+.alert-err  { background:var(--err-bg);   color:var(--err);    border-color:#fca5a5; }
+.alert-info { background:#eff6ff; color:#1e40af; border-color:#bfdbfe; }
+.notice-box {
+  background:#fff8e8; border:1px solid var(--gold-lt); border-radius:10px;
+  padding:16px 20px; margin:20px auto 0; max-width:460px; text-align:left;
 }
-.alert-ok  { background: var(--green-bg); color: var(--green);  border-color:#86efac; }
-.alert-err { background: var(--err-bg);   color: var(--err);    border-color:#fca5a5; }
-.alert-info{ background:#eff6ff; color:#1e40af; border-color:#bfdbfe; }
-
-#portal-view { animation: fadeUp .4s ease both; }
-
+.notice-box .notice-title { font-size:.82rem; font-weight:700; color:var(--navy); text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
+.notice-box p { font-size:.85rem; color:#4b5563; line-height:1.6; margin:0; }
+.notice-box .notice-contact { margin-top:10px; font-size:.85rem; color:var(--navy); line-height:1.9; }
+#portal-view { animation:fadeUp .4s ease both; }
 .portal-header { margin-bottom:32px; }
-.portal-header h2 {
-  font-family:'Cormorant Garamond',serif;
-  font-size:1.7rem; font-weight:700;
-  color: var(--navy); margin-bottom:4px;
-}
-.portal-header p { color: var(--gray); font-size:.9rem; }
-
-.record-block {
-  background:#fff;
-  border-radius:14px;
-  border:1px solid var(--border);
-  box-shadow:0 4px 20px rgba(26,39,68,.08);
-  margin-bottom:24px;
-  overflow:hidden;
-}
-.record-head {
-  background:linear-gradient(135deg,var(--navy) 0%,#243160 100%);
-  padding:20px 26px;
-  display:flex; align-items:center; gap:16px;
-}
-.record-avatar {
-  width:46px; height:46px; border-radius:50%;
-  background: var(--gold); color: var(--navy);
-  display:flex; align-items:center; justify-content:center;
-  font-family:'Cormorant Garamond',serif;
-  font-size:1.3rem; font-weight:700; flex-shrink:0;
-}
+.portal-header h2 { font-family:'Cormorant Garamond',serif; font-size:1.7rem; font-weight:700; color:var(--navy); margin-bottom:4px; }
+.portal-header p { color:var(--gray); font-size:.9rem; }
+.record-block { background:#fff; border-radius:14px; border:1px solid var(--border); box-shadow:0 4px 20px rgba(26,39,68,.08); margin-bottom:24px; overflow:hidden; }
+.record-head { background:linear-gradient(135deg,var(--navy) 0%,#243160 100%); padding:20px 26px; display:flex; align-items:center; gap:16px; }
+.record-avatar { width:46px; height:46px; border-radius:50%; background:var(--gold); color:var(--navy); display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; font-size:1.3rem; font-weight:700; flex-shrink:0; }
 .record-info h3 { color:#fff; font-size:1rem; font-weight:600; margin-bottom:2px; }
-.record-info p  { color: var(--gold-lt); font-size:.8rem; }
-
+.record-info p  { color:var(--gold-lt); font-size:.8rem; }
 .record-body { padding:22px 26px; }
-
 .pkg-list { list-style:none; display:grid; gap:10px; }
-.pkg-item {
-  display:flex; align-items:center; gap:14px;
-  padding:14px 16px;
-  background: var(--cream);
-  border:1px solid var(--border);
-  border-radius:10px;
-  transition:.15s;
-}
-.pkg-item:hover { border-color: var(--gold); background:#fdf9f0; }
+.pkg-item { display:flex; align-items:center; gap:14px; padding:14px 16px; background:var(--cream); border:1px solid var(--border); border-radius:10px; transition:.15s; }
+.pkg-item:hover { border-color:var(--gold); background:#fdf9f0; }
 .pkg-icon { font-size:1.5rem; flex-shrink:0; }
 .pkg-info { flex:1; min-width:0; }
-.pkg-info strong {
-  display:block; font-size:.9rem; font-weight:600;
-  color: var(--navy);
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-}
-.pkg-info span { font-size:.76rem; color: var(--gray); }
-.pkg-badge {
-  display:inline-flex; align-items:center;
-  padding:3px 10px; border-radius:20px;
-  font-size:.7rem; font-weight:700;
-  background:#dbeafe; color:#1e40af;
-  flex-shrink:0;
-}
+.pkg-info strong { display:block; font-size:.9rem; font-weight:600; color:var(--navy); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.pkg-info span { font-size:.76rem; color:var(--gray); }
+.pkg-badge { display:inline-flex; align-items:center; padding:3px 10px; border-radius:20px; font-size:.7rem; font-weight:700; background:#dbeafe; color:#1e40af; flex-shrink:0; }
 .pkg-badge.inf { background:#fce7f3; color:#9d174d; }
-
-.download-btn {
-  display:inline-flex; align-items:center; gap:6px;
-  padding:8px 16px;
-  background: var(--navy); color:#fff;
-  border:none; border-radius:7px;
-  font-family:'DM Sans',sans-serif;
-  font-size:.8rem; font-weight:600;
-  cursor:pointer; text-decoration:none;
-  transition:.15s; flex-shrink:0;
-}
-.download-btn:hover { background: var(--blue); }
-
-.no-packages {
-  text-align:center; padding:24px;
-  color: var(--gray); font-size:.9rem;
-  font-style:italic;
-}
-
-.spin {
-  display:inline-block; width:18px; height:18px;
-  border:2.5px solid rgba(255,255,255,.3);
-  border-top-color:#fff; border-radius:50%;
-  animation:spin .7s linear infinite;
-}
+.download-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:var(--navy); color:#fff; border:none; border-radius:7px; font-family:'DM Sans',sans-serif; font-size:.8rem; font-weight:600; cursor:pointer; text-decoration:none; transition:.15s; flex-shrink:0; }
+.download-btn:hover { background:var(--blue); }
+.no-packages { text-align:center; padding:24px; color:var(--gray); font-size:.9rem; font-style:italic; }
+.spin { display:inline-block; width:18px; height:18px; border:2.5px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
-
-.footer-note {
-  text-align:center; font-size:.78rem; color: var(--gray);
-  margin-top:40px; line-height:1.6;
-}
-
+.footer-note { text-align:center; font-size:.78rem; color:var(--gray); margin-top:40px; line-height:1.6; }
 @media(max-width:600px) {
   header { padding:0 18px; }
   main   { padding:32px 16px 60px; }
@@ -284,10 +132,10 @@ main {
   <!-- LOGIN VIEW -->
   <div id="login-view">
     <div class="login-wrap">
-      <div class="login-icon">🎓</div>
+      <div class="login-icon">&#127891;</div>
       <h1>Access Your Certificates</h1>
       <p>Enter your name and the email address you used for your CDA training. We'll send you a secure link to view and download your certificates.</p>
-      
+
       <div class="card">
         <div id="login-alert" style="display:none"></div>
         <div class="field">
@@ -303,15 +151,13 @@ main {
         </button>
       </div>
 
-      <div style="background:#fff8e8;border:1px solid #e8d5a3;border-radius:10px;padding:16px 20px;margin:20px auto 0;max-width:460px;text-align:left;">
-        <p style="margin:0 0 6px;font-size:.82rem;font-weight:700;color:#1a2744;text-transform:uppercase;letter-spacing:.04em;">📋 Monthly Updates</p>
-        <p style="margin:0;font-size:.85rem;color:#4b5563;line-height:1.6;">
-          Training records are updated monthly. If you need a current certificate or CDA Training Certificate Package, please contact us to request your latest transcript:
-        </p>
-        <p style="margin:10px 0 0;font-size:.85rem;color:#1a2744;line-height:1.8;">
-          📞 <a href="tel:2694446128" style="color:#1a2744;font-weight:600;text-decoration:none;">269-444-6128</a><br>
-          ✉️ <span id="contact-email-1"></span>
-        </p>
+      <div class="notice-box">
+        <div class="notice-title">&#128203; Monthly Updates</div>
+        <p>Training records are updated monthly. If you need a current certificate or CDA Training Certificate Package, please contact us to request your latest transcript:</p>
+        <div class="notice-contact">
+          &#128222; <a href="tel:2694446128" style="color:var(--navy);font-weight:600;text-decoration:none;">269-444-6128</a><br>
+          &#9993; <span id="contact-email-1"></span>
+        </div>
       </div>
 
     </div>
@@ -332,156 +178,6 @@ main {
 
 </main>
 
-<script>
-let SESSION_EMAIL = '';
-
-fetch('/api/assets').then(r => r.json()).then(d => {
-  if (d.logo) {
-    const img = document.getElementById('hdr-logo');
-    img.src = d.logo; img.style.display = 'block';
-  }
-}).catch(() => {});
-
-window.addEventListener('load', () => {
-  const params = new URLSearchParams(location.search);
-  const token  = params.get('token');
-  if (token) verifyToken(token);
-  ['inp-name','inp-email'].forEach(id => {
-    document.getElementById(id).addEventListener('keydown', e => {
-      if (e.key === 'Enter') requestLink();
-    });
-  });
-});
-
-async function requestLink() {
-  const name  = document.getElementById('inp-name').value.trim();
-  const email = document.getElementById('inp-email').value.trim();
-
-  if (!name || !email) {
-    showAlert('login-alert', 'err', 'Please enter both your name and email address.');
-    return;
-  }
-  if (!email.includes('@')) {
-    showAlert('login-alert', 'err', 'Please enter a valid email address.');
-    return;
-  }
-
-  setLoginLoading(true);
-  showAlert('login-alert', 'info', '⏳ Sending your access link…');
-
-  try {
-    const res = await fetch('/api/auth/request', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email })
-    });
-
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(data.error || 'Server error. Please try again.');
-    }
-
-    showAlert('login-alert', 'ok',
-      '✅ If your email is in our system, a secure link is on its way to <strong>' +
-      escHtml(email) + '</strong>. Please check your inbox and spam folder. The link expires in 24 hours.');
-    document.getElementById('login-btn').disabled = true;
-
-  } catch (e) {
-    showAlert('login-alert', 'err', '⚠️ ' + e.message);
-  } finally {
-    setLoginLoading(false);
-  }
-}
-
-async function verifyToken(token) {
-  // Show a loading state while verifying
-  document.getElementById('login-view').style.display = 'block';
-  showAlert('login-alert', 'info', '⏳ Verifying your link, please wait…');
-  try {
-    const res  = await fetch('/api/auth/verify/' + encodeURIComponent(token));
-    const data = await res.json();
-    if (!res.ok) {
-      showAlert('login-alert', 'err',
-        '⚠️ ' + (data.error || 'This link has expired or already been used.') +
-        ' Please enter your details below to request a new one.');
-      return;
-    }
-    history.replaceState({}, '', '/portal');
-    SESSION_EMAIL = data.email;
-    renderPortal(data);
-  } catch (e) {
-    showAlert('login-alert', 'err', '⚠️ Verification failed. Please request a new link below.');
-  }
-}
-
-function renderPortal(data) {
-  document.getElementById('login-view').style.display  = 'none';
-  document.getElementById('portal-view').style.display = 'block';
-  document.querySelector('#portal-email-line strong').textContent = data.email;
-
-  const list = document.getElementById('records-list');
-  list.innerHTML = '';
-
-  if (!data.students || !data.students.length) {
-    list.innerHTML = '<div class="card"><p class="no-packages">No training records found for this email.</p></div>';
-    return;
-  }
-
-  data.students.forEach(student => {
-    const block = document.createElement('div');
-    block.className = 'record-block';
-
-    const initial    = student.name.charAt(0).toUpperCase();
-    const pathLabel  = student.path_label || (student.path === 'pre' ? 'Preschool CDA Training' : 'Infant & Toddler CDA Training');
-    const badgeCls   = student.path === 'inf' ? 'inf' : '';
-    const certCount  = (student.certificates || []).length;
-    const totalHours = certCount * 3;
-
-    let pkgsHTML = '';
-    if (!student.packages || !student.packages.length) {
-      pkgsHTML = '<p class="no-packages">No downloadable packages on file yet. Please contact your instructor.</p>';
-    } else {
-      pkgsHTML = '<ul class="pkg-list">' +
-        student.packages.map(pkg => {
-          const date  = new Date(pkg.generated_at).toLocaleDateString('en-US',
-            { month:'short', day:'numeric', year:'numeric' });
-          const dlUrl = `/api/portal/pdf/${pkg.id}?email=${encodeURIComponent(SESSION_EMAIL)}`;
-          const label = pkg.filename
-            ? pkg.filename.replace(/_/g,' ').replace('.pdf','')
-            : 'CDA Training Package';
-          return `<li class="pkg-item">
-            <span class="pkg-icon">📄</span>
-            <div class="pkg-info">
-              <strong>${escHtml(label)}</strong>
-              <span>Generated ${escHtml(date)}</span>
-            </div>
-            <a class="download-btn" href="${dlUrl}" download="${escAttr(pkg.filename || 'package.pdf')}">⬇ Download PDF</a>
-          </li>`;
-        }).join('') +
-      '</ul>';
-    }
-
-    block.innerHTML = `
-      <div class="record-head">
-        <div class="record-avatar">${initial}</div>
-        <div class="record-info">
-          <h3>${escHtml(student.name)}</h3>
-          <p>${escHtml(pathLabel)} &nbsp;·&nbsp; ${certCount} courses &nbsp;·&nbsp; ${totalHours} hours</p>
-        </div>
-        <span class="pkg-badge ${badgeCls}" style="margin-left:auto">
-          ${student.path === 'pre' ? 'Preschool' : 'Infant &amp; Toddler'}
-        </span>
-      </div>
-      <div class="record-body">
-        <p style="font-size:.82rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--gray);margin-bottom:12px;">
-          Certificate Packages
-        </p>
-        ${pkgsHTML}
-      </div>`;
-
-    list.appendChild(block);
-  });
-}
-
-function setLoginLoading(on) {
-  const btn  = document.getElementById(
+<script data-cfasync="false" src="/portal.js"></script>
+</body>
+</html>
