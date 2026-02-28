@@ -1,6 +1,91 @@
-// email.js — placeholder until SendGrid is configured
-async function sendMagicLink(email, token, name) {
-  const link = `${process.env.APP_URL || 'https://cda-certificate-generator.onrender.com'}/portal?token=${token}`;
-  console.log(`[MAGIC LINK] To: ${email} | Link: ${link}`);
+// email.js — Magic link sender using SendGrid
+// Required env vars:
+//   SENDGRID_API_KEY  — your SendGrid API key
+//   EMAIL_FROM        — verified sender address (e.g. noreply@nationalcdatraining.com)
+//   APP_URL           — base URL (e.g. https://cda-certificate-generator.onrender.com)
+
+const sgMail  = require('@sendgrid/mail');
+
+const APP_URL = process.env.APP_URL  || 'https://cda-certificate-generator.onrender.com';
+const FROM    = process.env.EMAIL_FROM || 'noreply@nationalcdatraining.com';
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+async function sendMagicLink(toEmail, token, studentName) {
+  if (!process.env.SENDGRID_API_KEY) {
+    throw new Error('SENDGRID_API_KEY environment variable is not set.');
+  }
+
+  const link      = `${APP_URL}/portal?token=${token}`;
+  const firstName = studentName ? studentName.split(' ')[0] : 'there';
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#f5f4f0;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f4f0;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:#1a2744;padding:32px 40px;text-align:center;">
+            <div style="font-family:'Georgia',serif;font-size:22px;color:#c9a84c;font-weight:bold;">
+              National CDA Training
+            </div>
+            <div style="color:#a8b8d4;font-size:13px;margin-top:6px;">Student Certificate Portal</div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:40px 40px 32px;">
+            <p style="margin:0 0 16px;font-size:16px;color:#1a2744;">Hi ${firstName},</p>
+            <p style="margin:0 0 24px;font-size:15px;color:#4b5563;line-height:1.6;">
+              Here is your secure link to access your CDA training certificates and transcript.
+              Click the button below to view and download your documents.
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td align="center" style="padding:8px 0 32px;">
+                  <a href="${link}"
+                     style="display:inline-block;background:#c9a84c;color:#1a2744;text-decoration:none;
+                            font-weight:bold;font-size:16px;padding:14px 36px;border-radius:8px;">
+                    Access My Certificates &rarr;
+                  </a>
+                </td>
+              </tr>
+            </table>
+            <div style="background:#f8f7f3;border:1px solid #e5e0d5;border-radius:8px;padding:16px 20px;margin-bottom:24px;">
+              <p style="margin:0;font-size:13px;color:#6b7280;line-height:1.5;">
+                <strong>This link expires in 24 hours</strong> and can only be used once.
+                If you need a new link, return to the portal and request another.
+              </p>
+            </div>
+            <p style="margin:0;font-size:13px;color:#9ca3af;line-height:1.5;">
+              If you did not request this link, you can safely ignore this email.
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f8f7f3;border-top:1px solid #e5e0d5;padding:20px 40px;text-align:center;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;">
+              National CDA Training &nbsp;&middot;&nbsp; 4775 Erie Drive, Buchanan, MI 49107<br>
+              866-726-3056 &nbsp;&middot;&nbsp; Mary@NationalCDATraining.com
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  await sgMail.send({
+    to:      toEmail,
+    from:    FROM,
+    subject: 'Your CDA Training Certificates — Access Link',
+    html,
+  });
+
+  console.log(`Magic link sent to ${toEmail}`);
 }
+
 module.exports = { sendMagicLink };
