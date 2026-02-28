@@ -138,16 +138,8 @@ app.post('/api/auth/request', async (req, res) => {
       return res.json({ ok: true });
     }
 
-    // Verify name loosely matches at least one record
-    const nameLower = name.toLowerCase().trim();
-    const matched = students.some(s =>
-      s.name.toLowerCase().includes(nameLower) ||
-      nameLower.includes(s.name.toLowerCase().split(' ')[0])
-    );
-    if (!matched) {
-      console.log(`Portal request: name mismatch for email=${emailLower}`);
-      return res.json({ ok: true });
-    }
+    // Log the name provided but don't block on it — email match is sufficient
+    console.log(`Portal request: sending link for email=${emailLower}, name provided="${name}"`);
 
     const token = await db.createMagicToken(emailLower);
     await sendMagicLink(emailLower, token, students[0].name);
